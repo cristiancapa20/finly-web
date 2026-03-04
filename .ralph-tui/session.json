@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "sessionId": "2b597407-06fc-4743-a2a2-1e8c6dc65269",
+  "status": "running",
+  "startedAt": "2026-03-04T20:28:31.702Z",
+  "updatedAt": "2026-03-04T20:34:49.523Z",
+  "currentIteration": 0,
+  "maxIterations": 0,
+  "tasksCompleted": 0,
+  "isPaused": false,
+  "agentPlugin": "claude",
+  "trackerState": {
+    "plugin": "json",
+    "prdPath": "./tasks/prd.json",
+    "totalTasks": 11,
+    "tasks": [
+      {
+        "id": "US-001",
+        "title": "Configuración inicial del proyecto Next.js con autenticación",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-002",
+        "title": "Schema de base de datos SQLite con Prisma y seed de categorías",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-003",
+        "title": "API Routes CRUD de transacciones (/api/transactions)",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-004",
+        "title": "API Route para parsear texto con LLM (/api/parse-transaction)",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-005",
+        "title": "Página principal: entrada de transacción por texto con revisión y guardado",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-006",
+        "title": "Entrada por audio con Web Speech API",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-007",
+        "title": "Página de historial de transacciones con filtros",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-008",
+        "title": "API Route de estadísticas para dashboard (/api/stats)",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-009",
+        "title": "Dashboard con gráficas y resumen financiero",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-010",
+        "title": "Exportación de transacciones a CSV",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-011",
+        "title": "Página de configuración: gestión de cuentas y categorías",
+        "status": "open",
+        "completedInSession": false
+      }
+    ]
+  },
+  "iterations": [],
+  "skippedTaskIds": [],
+  "cwd": "/Users/cristian/Desktop/finance",
+  "activeTaskIds": [],
+  "subagentPanelVisible": false
+}
