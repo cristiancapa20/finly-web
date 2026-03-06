@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { toast } from "@/lib/toast";
 
 interface SpeechRecognitionAlternative {
@@ -77,6 +78,7 @@ export default function TransactionForm() {
   const [nullFields, setNullFields] = useState<Set<string>>(new Set());
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accountsLoaded, setAccountsLoaded] = useState(false);
   const [micState, setMicState] = useState<"idle" | "recording">("idle");
   const [speechSupported, setSpeechSupported] = useState<boolean | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
@@ -88,6 +90,7 @@ export default function TransactionForm() {
     ]).then(([catRes, accRes]) => {
       if (catRes.data) setCategories(catRes.data);
       if (accRes.data) setAccounts(accRes.data);
+      setAccountsLoaded(true);
     });
   }, []);
 
@@ -242,6 +245,22 @@ export default function TransactionForm() {
 
   return (
     <div className="space-y-6">
+      {/* No accounts warning banner */}
+      {accountsLoaded && accounts.length === 0 && (
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm">
+          <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          <p className="text-amber-800">
+            No tienes ninguna cuenta creada. Para registrar transacciones primero debes{" "}
+            <Link href="/settings" className="font-semibold underline hover:text-amber-900">
+              crear una cuenta en Configuración
+            </Link>
+            .
+          </p>
+        </div>
+      )}
+
       {/* Natural language input */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900 mb-3">
@@ -448,18 +467,46 @@ export default function TransactionForm() {
                   <span className="ml-1 text-amber-500">*</span>
                 )}
               </label>
-              <select
-                value={form.accountId}
-                onChange={(e) => updateField("accountId", e.target.value)}
-                className={`${inputBase} ${highlightClass("accountId")}`}
-              >
-                <option value="">Seleccionar...</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
+              {accounts.length === 0 ? (
+                <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  <svg className="w-4 h-4 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                  </svg>
+                  <span>
+                    Sin cuentas.{" "}
+                    <Link href="/settings" className="font-semibold underline hover:text-amber-900">
+                      Crear en Configuración →
+                    </Link>
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <select
+                    value={form.accountId}
+                    onChange={(e) => updateField("accountId", e.target.value)}
+                    className={`${inputBase} ${highlightClass("accountId")}`}
+                  >
+                    <option value="">Seleccionar...</option>
+                    {accounts.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                  {nullFields.has("accountId") && (
+                    <p className="mt-1.5 flex items-start gap-1.5 text-xs text-amber-700">
+                      <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z" />
+                      </svg>
+                      La cuenta que mencionaste no existe aún. Selecciónala manualmente o{" "}
+                      <Link href="/settings" className="font-semibold underline hover:text-amber-900">
+                        créala en Configuración
+                      </Link>
+                      .
+                    </p>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Description */}
