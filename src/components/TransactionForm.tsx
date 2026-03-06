@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { sileo } from "sileo";
 
 interface SpeechRecognitionAlternative {
   transcript: string;
@@ -74,9 +75,6 @@ export default function TransactionForm() {
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<FormState | null>(null);
   const [nullFields, setNullFields] = useState<Set<string>>(new Set());
-  const [successMessage, setSuccessMessage] = useState("");
-  const [parseError, setParseError] = useState("");
-  const [saveError, setSaveError] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [micState, setMicState] = useState<"idle" | "recording">("idle");
@@ -150,9 +148,6 @@ export default function TransactionForm() {
     const textToProcess = inputText ?? text;
     if (!textToProcess.trim()) return;
     setIsParsing(true);
-    setParseError("");
-    setSuccessMessage("");
-    setSaveError("");
 
     try {
       const res = await fetch("/api/parse-transaction", {
@@ -164,7 +159,7 @@ export default function TransactionForm() {
       const data: ParsedTransaction & { error?: string } = await res.json();
 
       if (!res.ok) {
-        setParseError(data.error ?? "Error al procesar la transacción");
+        sileo.error({ title: "Error al procesar la transacción", description: data.error });
         return;
       }
 
@@ -186,7 +181,7 @@ export default function TransactionForm() {
         date: data.date ?? "",
       });
     } catch {
-      setParseError("Error de red al procesar la transacción");
+      sileo.error({ title: "Error de red al procesar la transacción" });
     } finally {
       setIsParsing(false);
     }
@@ -194,7 +189,6 @@ export default function TransactionForm() {
 
   async function handleSave() {
     if (!form) return;
-    setSaveError("");
     setIsSaving(true);
 
     try {
@@ -214,16 +208,16 @@ export default function TransactionForm() {
       const data: { error?: string } = await res.json();
 
       if (!res.ok) {
-        setSaveError(data.error ?? "Error al guardar la transacción");
+        sileo.error({ title: "Error al guardar la transacción", description: data.error });
         return;
       }
 
-      setSuccessMessage("Transacción guardada exitosamente");
+      sileo.success({ title: "Transacción guardada exitosamente" });
       setText("");
       setForm(null);
       setNullFields(new Set());
     } catch {
-      setSaveError("Error de red al guardar la transacción");
+      sileo.error({ title: "Error de red al guardar la transacción" });
     } finally {
       setIsSaving(false);
     }
@@ -368,9 +362,6 @@ export default function TransactionForm() {
               )}
             </button>
           </div>
-          {parseError && (
-            <p className="text-sm text-red-600">{parseError}</p>
-          )}
         </div>
       </div>
 
@@ -557,39 +548,9 @@ export default function TransactionForm() {
             </button>
           </div>
 
-          {saveError && (
-            <p className="mt-3 text-sm text-red-600">{saveError}</p>
-          )}
         </div>
       )}
 
-      {/* Success message */}
-      {successMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 flex items-center gap-2">
-          <svg
-            className="h-5 w-5 text-green-500 flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          <p className="text-sm text-green-700 font-medium">{successMessage}</p>
-          <button
-            onClick={() => setSuccessMessage("")}
-            className="ml-auto text-green-500 hover:text-green-700"
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
     </div>
   );
 }

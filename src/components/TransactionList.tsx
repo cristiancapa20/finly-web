@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { sileo } from "sileo";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 interface Category {
@@ -247,8 +248,13 @@ export default function TransactionList() {
       const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
       if (res.ok) {
         setDeleteConfirmId(null);
+        sileo.success({ title: "Transacción eliminada" });
         await fetchTransactions();
+      } else {
+        sileo.error({ title: "Error al eliminar la transacción" });
       }
+    } catch {
+      sileo.error({ title: "Error de red al eliminar la transacción" });
     } finally {
       setIsDeleting(false);
     }
