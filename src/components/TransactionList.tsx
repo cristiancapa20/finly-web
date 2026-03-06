@@ -62,6 +62,20 @@ function formatAmount(amount: number, type: string) {
   return `${sign}$${Math.abs(amount).toFixed(2)}`;
 }
 
+function getDateParts(dateStr: string) {
+  const d = new Date(dateStr);
+  const day = d.getDate();
+  const dayName = d
+    .toLocaleDateString("es-ES", { weekday: "short" })
+    .replace(".", "")
+    .toUpperCase();
+  const month = d
+    .toLocaleDateString("es-ES", { month: "short" })
+    .replace(".", "")
+    .toUpperCase();
+  return { day, dayName, month };
+}
+
 function TypeBadge({ type }: { type: string }) {
   const isIncome = type === "INCOME";
   const Icon = isIncome ? TrendingUp : TrendingDown;
@@ -626,68 +640,74 @@ export default function TransactionList() {
 
           {/* Mobile cards */}
           <div className="sm:hidden space-y-3">
-            {transactions.map((t) => (
-              <div
-                key={t.id}
-                className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {t.description ?? (
-                        <span className="text-gray-400 italic font-normal">
-                          Sin descripción
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {formatDate(t.date)}
-                    </p>
+            {transactions.map((t) => {
+              const { day, dayName, month } = getDateParts(t.date);
+              return (
+                <div
+                  key={t.id}
+                  className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex"
+                >
+                  {/* Left date panel */}
+                  <div className="bg-gray-100 flex flex-col items-center justify-center px-3 py-3 min-w-[58px] border-r border-gray-200 flex-shrink-0">
+                    <span className="text-2xl font-bold text-gray-800 leading-none">{day}</span>
+                    <span className="text-xs font-medium text-gray-500 mt-0.5">{dayName}</span>
+                    <span className="text-xs text-gray-400 mt-0.5">{month}</span>
                   </div>
-                  <div className="ml-3 flex-shrink-0 text-right">
-                    <p
-                      className={`text-sm font-semibold ${
-                        t.type === "INCOME" ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {formatAmount(t.amount, t.type)}
-                    </p>
-                    <div className="mt-0.5">
+
+                  {/* Right content */}
+                  <div className="flex flex-col flex-1 min-w-0">
+                    {/* Main content */}
+                    <div className="flex items-start justify-between px-3 pt-3 pb-2">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {t.description ?? (
+                            <span className="text-gray-400 italic font-normal">Sin descripción</span>
+                          )}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <CategoryBadge name={t.category.name} color={t.category.color} />
+                          <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                            <Wallet className="w-3 h-3" />
+                            {t.account.name}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 text-right">
+                        <p
+                          className={`text-sm font-bold ${
+                            t.type === "INCOME" ? "text-green-600" : "text-red-600"
+                          }`}
+                        >
+                          {formatAmount(t.amount, t.type)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Bottom bar */}
+                    <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100">
                       <TypeBadge type={t.type} />
+                      <div className="flex items-center gap-0.5">
+                        <button
+                          onClick={() => setEditingTransaction(t)}
+                          className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          title="Editar"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <DeleteButton
+                          id={t.id}
+                          confirmId={deleteConfirmId}
+                          isDeleting={isDeleting}
+                          onRequestDelete={(id) => setDeleteConfirmId(id)}
+                          onConfirmDelete={handleConfirmDelete}
+                          onCancelDelete={() => setDeleteConfirmId(null)}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <CategoryBadge
-                      name={t.category.name}
-                      color={t.category.color}
-                    />
-                    <span className="inline-flex items-center gap-1 text-xs text-gray-400">
-                      <Wallet className="w-3 h-3" />
-                      {t.account.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setEditingTransaction(t)}
-                      className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
-                      title="Editar"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <DeleteButton
-                      id={t.id}
-                      confirmId={deleteConfirmId}
-                      isDeleting={isDeleting}
-                      onRequestDelete={(id) => setDeleteConfirmId(id)}
-                      onConfirmDelete={handleConfirmDelete}
-                      onCancelDelete={() => setDeleteConfirmId(null)}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Pagination */}
