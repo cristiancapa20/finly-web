@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = request.nextUrl;
   const monthParam = searchParams.get("month");
+  const accountId = searchParams.get("accountId") ?? undefined;
 
   let year: number;
   let month: number;
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
   const transactions = await prisma.transaction.findMany({
     where: {
       date: { gte: startDate, lt: endDate },
+      ...(accountId ? { accountId } : {}),
     },
     include: { category: true },
   });

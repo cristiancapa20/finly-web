@@ -4,11 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import {
   PieChart,
   Pie,
-  Cell,
   Tooltip,
   Legend,
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -107,17 +106,34 @@ function addMonths(yyyyMm: string, delta: number) {
   return getMonthString(d);
 }
 
+interface Account {
+  id: string;
+  name: string;
+}
+
 export default function DashboardClient() {
   const [selectedMonth, setSelectedMonth] = useState(getMonthString(new Date()));
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [monthStats, setMonthStats] = useState<MonthStats | null>(null);
   const [monthlyData, setMonthlyData] = useState<MonthlyDataPoint[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingMonthly, setLoadingMonthly] = useState(true);
 
-  const fetchMonthStats = useCallback(async (month: string) => {
+  useEffect(() => {
+    fetch("/api/accounts")
+      .then((r) => r.json())
+      .then((data: { data?: Account[] }) => {
+        if (data.data) setAccounts(data.data);
+      });
+  }, []);
+
+  const fetchMonthStats = useCallback(async (month: string, accountId: string) => {
     setLoadingStats(true);
     try {
-      const res = await fetch(`/api/stats?month=${month}`);
+      const params = new URLSearchParams({ month });
+      if (accountId) params.set("accountId", accountId);
+      const res = await fetch(`/api/stats?${params}`);
       if (res.ok) {
         const data = await res.json();
         setMonthStats(data);
@@ -127,10 +143,12 @@ export default function DashboardClient() {
     }
   }, []);
 
-  const fetchMonthlyData = useCallback(async () => {
+  const fetchMonthlyData = useCallback(async (accountId: string) => {
     setLoadingMonthly(true);
     try {
-      const res = await fetch("/api/stats/monthly?months=6");
+      const params = new URLSearchParams({ months: "6" });
+      if (accountId) params.set("accountId", accountId);
+      const res = await fetch(`/api/stats/monthly?${params}`);
       if (res.ok) {
         const data = await res.json();
         setMonthlyData(data.data);
@@ -141,12 +159,12 @@ export default function DashboardClient() {
   }, []);
 
   useEffect(() => {
-    fetchMonthStats(selectedMonth);
-  }, [selectedMonth, fetchMonthStats]);
+    fetchMonthStats(selectedMonth, selectedAccountId);
+  }, [selectedMonth, selectedAccountId, fetchMonthStats]);
 
   useEffect(() => {
-    fetchMonthlyData();
-  }, [fetchMonthlyData]);
+    fetchMonthlyData(selectedAccountId);
+  }, [selectedAccountId, fetchMonthlyData]);
 
   const handlePrev = () => setSelectedMonth((m) => addMonths(m, -1));
   const handleNext = () => {
@@ -167,6 +185,35 @@ export default function DashboardClient() {
 
   return (
     <div className="space-y-6">
+      {/* Account Switcher */}
+      {accounts.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedAccountId("")}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+              selectedAccountId === ""
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"
+            }`}
+          >
+            Todas
+          </button>
+          {accounts.map((account) => (
+            <button
+              key={account.id}
+              onClick={() => setSelectedAccountId(account.id)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                selectedAccountId === account.id
+                  ? "bg-indigo-600 text-white border-indigo-600"
+                  : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"
+              }`}
+            >
+              {account.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Month Selector */}
       <div className="flex items-center gap-4">
         <button
@@ -249,21 +296,24 @@ export default function DashboardClient() {
               <p className="text-sm">Sin transacciones en este período</p>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
-                  data={monthStats!.expensesByCategory}
-                  dataKey="total"
-                  nameKey="categoryName"
+                  data={monthStats!.expensesByCategory.map((e) => ({
+                    ...e,
+                    name: e.categoryName,
+                    value: e.total,
+                    fill: e.color,
+                  }))}
+                  dataKey="value"
+                  nameKey="name"
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                >
-                  {monthStats!.expensesByCategory.map((entry) => (
-                    <Cell key={entry.categoryId} fill={entry.color} />
-                  ))}
-                </Pie>
+                  innerRadius="68%"
+                  outerRadius="88%"
+                  cornerRadius="50%"
+                  paddingAngle={5}
+                />
                 <Tooltip content={<ChartTooltip />} />
                 <Legend content={<RoundedLegend />} />
               </PieChart>
@@ -289,19 +339,35 @@ export default function DashboardClient() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={monthlyData} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
+              <LineChart data={monthlyData} margin={{ top: 5, right: 8, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="month"
                   tickFormatter={formatMonthLabel}
                   tick={{ fontSize: 11 }}
                 />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} width={60} />
                 <Tooltip content={<ChartTooltip />} />
                 <Legend content={<RoundedLegend />} />
-                <Bar dataKey="income" name="Ingresos" fill="#10b981" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="expenses" name="Gastos" fill="#ef4444" radius={[3, 3, 0, 0]} />
-              </BarChart>
+                <Line
+                  type="monotone"
+                  dataKey="income"
+                  name="Ingresos"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={{ fill: "#fff", stroke: "#10b981", strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="expenses"
+                  name="Gastos"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  dot={{ fill: "#fff", stroke: "#ef4444", strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }}
+                />
+              </LineChart>
             </ResponsiveContainer>
           )}
         </div>

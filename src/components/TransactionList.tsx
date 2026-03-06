@@ -267,6 +267,35 @@ export default function TransactionList() {
 
   return (
     <div className="space-y-4">
+      {/* Account Switcher */}
+      {accounts.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => updateParams({ accountId: "" })}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+              accountIdParam === ""
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"
+            }`}
+          >
+            Todas
+          </button>
+          {accounts.map((account) => (
+            <button
+              key={account.id}
+              onClick={() => updateParams({ accountId: account.id })}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                accountIdParam === account.id
+                  ? "bg-indigo-600 text-white border-indigo-600"
+                  : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"
+              }`}
+            >
+              {account.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
         <div className="flex flex-wrap gap-3 items-end">
@@ -305,24 +334,6 @@ export default function TransactionList() {
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              Cuenta
-            </label>
-            <select
-              value={accountIdParam}
-              onChange={(e) => updateParams({ accountId: e.target.value })}
-              className={inputBase}
-            >
-              <option value="">Todas</option>
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
               Desde
             </label>
             <input
@@ -345,22 +356,21 @@ export default function TransactionList() {
             />
           </div>
 
-          {(typeParam || categoryIdParam || accountIdParam || dateFromParam || dateToParam) && (
-            <button
-              onClick={() =>
-                updateParams({
-                  type: "",
-                  categoryId: "",
-                  accountId: "",
-                  dateFrom: "",
-                  dateTo: "",
-                })
-              }
-              className="text-xs text-gray-500 hover:text-gray-700 underline self-end pb-1.5"
-            >
-              Limpiar filtros
-            </button>
-          )}
+          <button
+            onClick={() =>
+              updateParams({
+                type: "",
+                categoryId: "",
+                accountId: "",
+                dateFrom: "",
+                dateTo: "",
+              })
+            }
+            disabled={!typeParam && !categoryIdParam && !accountIdParam && !dateFromParam && !dateToParam}
+            className="px-3 py-1.5 text-xs font-medium text-red-400 border border-red-300 rounded-md hover:bg-red-50 self-end disabled:opacity-0 disabled:pointer-events-none transition-colors"
+          >
+            Limpiar filtros
+          </button>
 
           <div className="ml-auto self-end">
             <button

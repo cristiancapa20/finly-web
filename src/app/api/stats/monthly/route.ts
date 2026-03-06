@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const monthsParam = parseInt(searchParams.get("months") ?? "6", 10);
   const months = isNaN(monthsParam) || monthsParam < 1 ? 6 : monthsParam;
+  const accountId = searchParams.get("accountId") ?? undefined;
 
   const now = new Date();
   const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
   const transactions = await prisma.transaction.findMany({
     where: {
       date: { gte: startDate, lt: endDate },
+      ...(accountId ? { accountId } : {}),
     },
     select: { amount: true, type: true, date: true },
   });
