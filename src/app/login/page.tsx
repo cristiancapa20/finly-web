@@ -5,8 +5,9 @@ export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, HelpCircle } from "lucide-react";
 import { toast } from "@/lib/toast";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,7 +44,14 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 relative">
+        <Link
+          href="/help"
+          className="absolute top-4 right-4 flex items-center gap-1.5 text-gray-400 hover:text-indigo-600 transition text-xs font-medium"
+        >
+          <HelpCircle className="w-4 h-4" />
+          ¿Cómo usar la app?
+        </Link>
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-indigo-600">Finance Tracker</h1>
           <p className="mt-2 text-gray-500 text-sm">Inicia sesión para continuar</p>
@@ -100,7 +108,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !email.trim() || !password}
             className="w-full py-2.5 px-4 bg-indigo-600 text-white font-medium rounded-lg text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
           >
             {loading && (
