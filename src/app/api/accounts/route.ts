@@ -35,10 +35,14 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { name, type, color } = body;
+  const { name, type, color, initialBalance } = body;
 
   if (!name || !type) {
     return NextResponse.json({ error: "Name and type are required" }, { status: 400 });
+  }
+
+  if (initialBalance === undefined || initialBalance === null || isNaN(Number(initialBalance))) {
+    return NextResponse.json({ error: "El saldo inicial es requerido" }, { status: 400 });
   }
 
   const validTypes = ["CASH", "BANK", "CREDIT_CARD", "OTHER"];
@@ -50,6 +54,27 @@ export async function POST(req: NextRequest) {
     data: { name, type, userId: session.user.id, ...(color ? { color } : {}) },
     select: { id: true, name: true, type: true, color: true },
   });
+
+  const balance = Number(initialBalance);
+  if (balance > 0) {
+    const category = await prisma.category.findFirst({
+      where: { OR: [{ userId: session.user.id }, { isSystem: true }] },
+      select: { id: true },
+    });
+    if (category) {
+      await prisma.transaction.create({
+        data: {
+          amount: Math.round(balance * 100),
+          type: "INCOME",
+          categoryId: category.id,
+          accountId: account.id,
+          userId: session.user.id,
+          description: "Saldo inicial",
+          date: new Date(),
+        },
+      });
+    }
+  }
 
   return NextResponse.json({ data: account }, { status: 201 });
 }

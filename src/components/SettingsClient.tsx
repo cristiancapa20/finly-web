@@ -59,6 +59,7 @@ export default function SettingsClient() {
   const [newAccountName, setNewAccountName] = useState("");
   const [newAccountType, setNewAccountType] = useState<AccountType>("CASH");
   const [newAccountColor, setNewAccountColor] = useState("#1e3a5f");
+  const [newAccountBalance, setNewAccountBalance] = useState("");
   const [savingAccount, setSavingAccount] = useState(false);
   const [accountError, setAccountError] = useState("");
 
@@ -110,7 +111,7 @@ export default function SettingsClient() {
       const res = await fetch("/api/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newAccountName, type: newAccountType, color: newAccountColor }),
+        body: JSON.stringify({ name: newAccountName, type: newAccountType, color: newAccountColor, initialBalance: parseFloat(newAccountBalance) }),
       });
       if (!res.ok) {
         const json = await res.json();
@@ -120,6 +121,7 @@ export default function SettingsClient() {
       setNewAccountName("");
       setNewAccountType("CASH");
       setNewAccountColor("#1e3a5f");
+      setNewAccountBalance("");
       await fetchAccounts();
       toast.success({ title: "Cuenta creada exitosamente" });
     } finally {
@@ -306,6 +308,22 @@ export default function SettingsClient() {
             </select>
           </div>
           <div>
+            <label htmlFor="accountBalance" className="block text-xs text-gray-600 mb-1">
+              Saldo inicial <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="accountBalance"
+              type="number"
+              min="0"
+              step="0.01"
+              value={newAccountBalance}
+              onChange={(e) => setNewAccountBalance(e.target.value)}
+              required
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              placeholder="0.00"
+            />
+          </div>
+          <div>
             <label className="block text-xs text-gray-600 mb-2">Color de la tarjeta</label>
             <div className="flex flex-wrap gap-2 mb-2">
               {CARD_COLORS.map((color) => (
@@ -333,7 +351,7 @@ export default function SettingsClient() {
           </div>
           <button
             type="submit"
-            disabled={savingAccount}
+            disabled={savingAccount || !newAccountName.trim() || newAccountBalance === ""}
             className="w-full bg-indigo-600 text-white text-sm font-medium py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors"
           >
             {savingAccount ? "Creando..." : "Crear cuenta"}
