@@ -90,11 +90,11 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
             <div
-              className="w-24 h-24 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center cursor-pointer ring-4 ring-indigo-50"
+              className="relative w-24 h-24 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center cursor-pointer ring-4 ring-indigo-50"
               onClick={() => fileRef.current?.click()}
             >
               {avatar ? (
-                <Image src={avatar} alt="Avatar" fill className="object-cover" unoptimized />
+                <Image src={avatar} alt="Avatar" fill className="object-cover rounded-full" unoptimized />
               ) : (
                 <span className="text-2xl font-bold text-indigo-600">{initials}</span>
               )}
