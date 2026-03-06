@@ -10,11 +10,20 @@ export async function GET() {
 
     const accounts = await prisma.account.findMany({
       where: { userId: session.user.id },
-      select: { id: true, name: true, type: true, color: true },
+      select: {
+        id: true, name: true, type: true, color: true,
+        transactions: { select: { amount: true, type: true } },
+      },
       orderBy: { name: "asc" },
     });
 
-    return NextResponse.json({ data: accounts });
+    const data = accounts.map(({ transactions, ...acc }) => {
+      const balance = transactions.reduce((sum, t) =>
+        t.type === "INCOME" ? sum + t.amount : sum - t.amount, 0) / 100;
+      return { ...acc, balance: Math.round(balance * 100) / 100 };
+    });
+
+    return NextResponse.json({ data });
   } catch (error) {
     console.error("GET /api/accounts error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

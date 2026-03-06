@@ -13,7 +13,7 @@ interface Account {
   name: string;
   type: AccountType;
   color?: string;
-  _count?: { transactions: number };
+  balance?: number;
 }
 
 interface Category {
@@ -257,9 +257,12 @@ export default function SettingsClient() {
                     </div>
                   </div>
 
-                  {/* Account name */}
-                  <div className="relative z-10">
+                  {/* Account name + balance */}
+                  <div className="relative z-10 flex items-end justify-between">
                     <p className="text-white font-semibold text-lg leading-tight truncate">{account.name}</p>
+                    <p className="text-white font-bold text-base leading-tight flex-shrink-0 ml-2">
+                      {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", minimumFractionDigits: 2 }).format(account.balance ?? 0)}
+                    </p>
                   </div>
                 </div>
               );
