@@ -1,9 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { User, LogOut, ChevronDown } from "lucide-react";
+
+function UserAvatar({ name }: { name?: string | null }) {
+  const [avatar, setAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((r) => r.json())
+      .then((d) => { if (d.data?.avatar) setAvatar(d.data.avatar); });
+  }, []);
+
+  const initial = (name ?? "?")[0].toUpperCase();
+
+  return (
+    <div className="w-8 h-8 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center flex-shrink-0">
+      {avatar
+        ? <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+        : <span className="text-xs font-bold text-indigo-600">{initial}</span>
+      }
+    </div>
+  );
+}
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
@@ -14,8 +36,20 @@ const navLinks = [
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const { data: session } = useSession();
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm">
@@ -45,15 +79,39 @@ export default function Header() {
 
           {/* Right side */}
           <div className="hidden md:flex items-center gap-4">
-            {session?.user?.name && (
-              <span className="text-sm text-gray-500">{session.user.name}</span>
+            {session?.user && (
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setProfileOpen((v) => !v)}
+                  className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <UserAvatar name={session.user.name} />
+                  <span className="text-sm font-medium text-gray-700">{session.user.name}</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+                    <Link
+                      href="/profile"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <User className="w-4 h-4 text-gray-400" />
+                      Editar perfil
+                    </Link>
+                    <hr className="my-1 border-gray-100" />
+                    <button
+                      onClick={() => signOut({ callbackUrl: "/login" })}
+                      className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Salir
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
-            <button
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              className="text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
-            >
-              Salir
-            </button>
           </div>
 
           {/* Mobile menu button */}
@@ -96,6 +154,13 @@ export default function Header() {
             {session?.user?.name && (
               <p className="text-sm text-gray-500 py-1">{session.user.name}</p>
             )}
+            <Link
+              href="/profile"
+              onClick={() => setMenuOpen(false)}
+              className="block py-2 text-sm font-medium text-gray-600 hover:text-indigo-600"
+            >
+              Editar perfil
+            </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
               className="block py-2 text-sm font-medium text-red-600"

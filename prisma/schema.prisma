@@ -11,6 +11,8 @@ model User {
   id           String        @id @default(cuid())
   username     String        @unique
   passwordHash String
+  displayName  String?
+  avatar       String?
   createdAt    DateTime      @default(now())
   accounts     Account[]
   categories   Category[]

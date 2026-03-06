@@ -27,15 +27,18 @@ export const authOptions: NextAuthOptions = {
 
         return {
           id: user.id,
-          name: user.username,
+          name: user.displayName ?? user.username,
           email: `${user.username}@local`,
         };
       },
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) token.id = user.id;
+      if (trigger === "update" && session?.user?.name) {
+        token.name = session.user.name;
+      }
       return token;
     },
     session({ session, token }) {
