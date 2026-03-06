@@ -20,7 +20,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   return (
     <SessionProvider>
-      <Toaster position={isMobile ? "top-center" : "top-right"} theme="dark" />
+      <Toaster position={isMobile ? "top-center" : "top-right"} />
       {children}
     </SessionProvider>
   );
