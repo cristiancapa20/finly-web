@@ -8,6 +8,11 @@ interface Category {
   name: string;
 }
 
+interface Account {
+  id: string;
+  name: string;
+}
+
 interface Transaction {
   id: string;
   amount: number;
@@ -141,11 +146,13 @@ export default function TransactionList() {
 
   const typeParam = searchParams.get("type") ?? "";
   const categoryIdParam = searchParams.get("categoryId") ?? "";
+  const accountIdParam = searchParams.get("accountId") ?? "";
   const dateFromParam = searchParams.get("dateFrom") ?? "";
   const dateToParam = searchParams.get("dateTo") ?? "";
   const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -154,11 +161,13 @@ export default function TransactionList() {
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
-    fetch("/api/categories")
-      .then((r) => r.json())
-      .then((data: { data?: Category[] }) => {
-        if (data.data) setCategories(data.data);
-      });
+    Promise.all([
+      fetch("/api/categories").then((r) => r.json()),
+      fetch("/api/accounts").then((r) => r.json()),
+    ]).then(([catRes, accRes]) => {
+      if (catRes.data) setCategories(catRes.data);
+      if (accRes.data) setAccounts(accRes.data);
+    });
   }, []);
 
   const fetchTransactions = useCallback(async () => {
@@ -166,6 +175,7 @@ export default function TransactionList() {
     const params = new URLSearchParams();
     if (typeParam) params.set("type", typeParam);
     if (categoryIdParam) params.set("categoryId", categoryIdParam);
+    if (accountIdParam) params.set("accountId", accountIdParam);
     if (dateFromParam) params.set("dateFrom", dateFromParam);
     if (dateToParam) params.set("dateTo", dateToParam);
     params.set("page", String(pageParam));
@@ -179,7 +189,7 @@ export default function TransactionList() {
     } finally {
       setIsLoading(false);
     }
-  }, [typeParam, categoryIdParam, dateFromParam, dateToParam, pageParam]);
+  }, [typeParam, categoryIdParam, accountIdParam, dateFromParam, dateToParam, pageParam]);
 
   useEffect(() => {
     fetchTransactions();
@@ -206,6 +216,7 @@ export default function TransactionList() {
       const params = new URLSearchParams();
       if (typeParam) params.set("type", typeParam);
       if (categoryIdParam) params.set("categoryId", categoryIdParam);
+      if (accountIdParam) params.set("accountId", accountIdParam);
       if (dateFromParam) params.set("dateFrom", dateFromParam);
       if (dateToParam) params.set("dateTo", dateToParam);
 
@@ -288,6 +299,24 @@ export default function TransactionList() {
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
+              Cuenta
+            </label>
+            <select
+              value={accountIdParam}
+              onChange={(e) => updateParams({ accountId: e.target.value })}
+              className={inputBase}
+            >
+              <option value="">Todas</option>
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
               Desde
             </label>
             <input
@@ -310,12 +339,13 @@ export default function TransactionList() {
             />
           </div>
 
-          {(typeParam || categoryIdParam || dateFromParam || dateToParam) && (
+          {(typeParam || categoryIdParam || accountIdParam || dateFromParam || dateToParam) && (
             <button
               onClick={() =>
                 updateParams({
                   type: "",
                   categoryId: "",
+                  accountId: "",
                   dateFrom: "",
                   dateTo: "",
                 })

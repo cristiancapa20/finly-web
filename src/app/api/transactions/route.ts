@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const type = searchParams.get("type");
   const categoryId = searchParams.get("categoryId");
+  const accountId = searchParams.get("accountId");
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
   const page = parseInt(searchParams.get("page") ?? "1", 10);
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
   const where: Prisma.TransactionWhereInput = {};
   if (type) where.type = type;
   if (categoryId) where.categoryId = categoryId;
+  if (accountId) where.accountId = accountId;
   if (dateFrom || dateTo) {
     where.date = {
       ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
