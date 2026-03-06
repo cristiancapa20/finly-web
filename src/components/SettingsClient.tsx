@@ -73,6 +73,7 @@ export default function SettingsClient() {
   const [newCategoryColor, setNewCategoryColor] = useState(PRESET_COLORS[0]);
   const [savingCategory, setSavingCategory] = useState(false);
   const [categoryError, setCategoryError] = useState("");
+  const [categoryTab, setCategoryTab] = useState<"system" | "custom">("system");
 
   const fetchAccounts = useCallback(async () => {
     setLoadingAccounts(true);
@@ -341,15 +342,41 @@ export default function SettingsClient() {
       <section>
         <h2 className="text-lg font-semibold text-gray-800 mb-4">Categorías</h2>
 
+        {/* Tab switcher */}
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => setCategoryTab("system")}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+              categoryTab === "system"
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"
+            }`}
+          >
+            Sistema
+          </button>
+          <button
+            onClick={() => setCategoryTab("custom")}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+              categoryTab === "custom"
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"
+            }`}
+          >
+            Mis categorías
+          </button>
+        </div>
+
         {/* Category list */}
         <div className="bg-white rounded-lg border border-gray-200 mb-4">
           {loadingCategories ? (
             <p className="text-sm text-gray-500 p-4">Cargando...</p>
-          ) : categories.length === 0 ? (
-            <p className="text-sm text-gray-500 p-4">No hay categorías</p>
+          ) : categories.filter((c) => categoryTab === "system" ? c.isSystem : !c.isSystem).length === 0 ? (
+            <p className="text-sm text-gray-500 p-4">
+              {categoryTab === "custom" ? "Aún no has creado categorías" : "No hay categorías"}
+            </p>
           ) : (
             <ul className="divide-y divide-gray-100">
-              {categories.map((category) => (
+              {categories.filter((c) => categoryTab === "system" ? c.isSystem : !c.isSystem).map((category) => (
                 <li
                   key={category.id}
                   className="flex items-center justify-between px-4 py-3"
