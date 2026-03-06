@@ -13,6 +13,7 @@ out/
 # Database
 prisma/dev.db
 prisma/dev.db-journal
+turso-migration.sql
 
 # Build outputs
 dist/
