@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header";
+import QuickTransactionButton from "@/components/QuickTransactionButton";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ViewTransitions } from "next-view-transitions";
@@ -30,6 +31,7 @@ export default async function RootLayout({
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
               {children}
             </main>
+            {session && <QuickTransactionButton />}
           </Providers>
         </body>
       </html>
