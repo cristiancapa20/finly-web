@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { sileo } from "sileo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function LoginPage() {
     if (result?.error) {
       setError("Credenciales incorrectas. Intenta de nuevo.");
     } else {
+      sileo.success({ title: "Sesión iniciada" });
       router.push(callbackUrl);
       router.refresh();
     }

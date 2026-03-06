@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Trash2, Wallet, Building2, CreditCard, CircleDollarSign, Pencil, X } from "lucide-react";
+import { sileo } from "sileo";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import type { LucideIcon } from "lucide-react";
 
@@ -119,6 +120,7 @@ export default function SettingsClient() {
       setNewAccountType("CASH");
       setNewAccountColor("#1e3a5f");
       await fetchAccounts();
+      sileo.success({ title: "Cuenta creada exitosamente" });
     } finally {
       setSavingAccount(false);
     }
@@ -128,10 +130,11 @@ export default function SettingsClient() {
     const res = await fetch(`/api/accounts/${id}`, { method: "DELETE" });
     if (!res.ok) {
       const json = await res.json();
-      alert(json.error ?? "Error al eliminar cuenta");
+      sileo.error({ title: json.error ?? "Error al eliminar cuenta" });
       return;
     }
     await fetchAccounts();
+    sileo.success({ title: "Cuenta eliminada" });
   }
 
   function openEditAccount(account: Account) {
@@ -153,6 +156,7 @@ export default function SettingsClient() {
       if (res.ok) {
         setEditingAccount(null);
         await fetchAccounts();
+        sileo.success({ title: "Cuenta actualizada" });
       }
     } finally {
       setSavingEdit(false);
@@ -177,6 +181,7 @@ export default function SettingsClient() {
       setNewCategoryName("");
       setNewCategoryColor(PRESET_COLORS[0]);
       await fetchCategories();
+      sileo.success({ title: "Categoría creada exitosamente" });
     } finally {
       setSavingCategory(false);
     }
@@ -186,10 +191,11 @@ export default function SettingsClient() {
     const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
     if (!res.ok) {
       const json = await res.json();
-      alert(json.error ?? "Error al eliminar categoría");
+      sileo.error({ title: json.error ?? "Error al eliminar categoría" });
       return;
     }
     await fetchCategories();
+    sileo.success({ title: "Categoría eliminada" });
   }
 
   return (
