@@ -19,14 +19,14 @@ export async function DELETE(
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
   }
 
-  if (category.isSystem) {
+  if (category.isSystem || category.userId !== session.user.id) {
     return NextResponse.json(
-      { error: "No se puede eliminar una categoría del sistema" },
+      { error: "No se puede eliminar esta categoría" },
       { status: 409 }
     );
   }
 
-  const txCount = await prisma.transaction.count({ where: { categoryId: id } });
+  const txCount = await prisma.transaction.count({ where: { categoryId: id, userId: session.user.id } });
   if (txCount > 0) {
     return NextResponse.json(
       { error: "No se puede eliminar una categoría con transacciones asociadas" },

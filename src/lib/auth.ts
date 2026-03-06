@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,34 +16,33 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const validUsername = process.env.AUTH_USERNAME;
-        const validPasswordHash = process.env.AUTH_PASSWORD_HASH;
+        const user = await prisma.user.findUnique({
+          where: { username: credentials.username },
+        });
 
-        if (!validUsername || !validPasswordHash) {
-          return null;
-        }
+        if (!user) return null;
 
-        if (credentials.username !== validUsername) {
-          return null;
-        }
-
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          validPasswordHash
-        );
-
-        if (!isValid) {
-          return null;
-        }
+        const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
+        if (!isValid) return null;
 
         return {
-          id: "1",
-          name: validUsername,
-          email: `${validUsername}@local`,
+          id: user.id,
+          name: user.username,
+          email: `${user.username}@local`,
         };
       },
     }),
   ],
+  callbacks: {
+    jwt({ token, user }) {
+      if (user) token.id = user.id;
+      return token;
+    },
+    session({ session, token }) {
+      if (token.id) session.user.id = token.id as string;
+      return session;
+    },
+  },
   pages: {
     signIn: "/login",
   },

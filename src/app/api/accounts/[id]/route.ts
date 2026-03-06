@@ -8,16 +8,14 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const body = await req.json();
   const { name, color } = body;
 
   const account = await prisma.account.update({
-    where: { id },
+    where: { id, userId: session.user.id },
     data: {
       ...(name ? { name } : {}),
       ...(color ? { color } : {}),
@@ -33,13 +31,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
 
-  const txCount = await prisma.transaction.count({ where: { accountId: id } });
+  const txCount = await prisma.transaction.count({ where: { accountId: id, userId: session.user.id } });
   if (txCount > 0) {
     return NextResponse.json(
       { error: "No se puede eliminar una cuenta con transacciones asociadas" },
@@ -47,7 +43,7 @@ export async function DELETE(
     );
   }
 
-  await prisma.account.delete({ where: { id } });
+  await prisma.account.delete({ where: { id, userId: session.user.id } });
 
   return NextResponse.json({ success: true });
 }

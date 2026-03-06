@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
 
   const transactions = await prisma.transaction.findMany({
     where: {
+      userId: session.user.id,
       date: { gte: startDate, lt: endDate },
       ...(accountId ? { accountId } : {}),
     },

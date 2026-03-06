@@ -14,7 +14,7 @@ export async function DELETE(
 
   const { id } = params;
 
-  const existing = await prisma.transaction.findUnique({ where: { id } });
+  const existing = await prisma.transaction.findUnique({ where: { id, userId: session.user.id } });
   if (!existing) {
     return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
   }

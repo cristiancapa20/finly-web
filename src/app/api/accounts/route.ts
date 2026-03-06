@@ -6,11 +6,10 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const accounts = await prisma.account.findMany({
+      where: { userId: session.user.id },
       select: { id: true, name: true, type: true, color: true },
       orderBy: { name: "asc" },
     });
@@ -24,9 +23,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
   const { name, type, color } = body;
@@ -41,7 +38,7 @@ export async function POST(req: NextRequest) {
   }
 
   const account = await prisma.account.create({
-    data: { name, type, ...(color ? { color } : {}) },
+    data: { name, type, userId: session.user.id, ...(color ? { color } : {}) },
     select: { id: true, name: true, type: true, color: true },
   });
 

@@ -24,16 +24,6 @@ async function main() {
     })
   }
 
-  await prisma.account.upsert({
-    where: { id: 'acc-efectivo' },
-    update: {},
-    create: {
-      id: 'acc-efectivo',
-      name: 'Efectivo',
-      type: 'CASH',
-    },
-  })
-
   console.log('Seed completed successfully')
 }
 

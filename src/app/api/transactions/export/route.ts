@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
 
-  const where: Prisma.TransactionWhereInput = {};
+  const where: Prisma.TransactionWhereInput = { userId: session.user.id };
   if (type) where.type = type;
   if (categoryId) where.categoryId = categoryId;
   if (dateFrom || dateTo) {

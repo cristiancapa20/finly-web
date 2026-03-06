@@ -10,6 +10,7 @@ export async function GET() {
   }
 
   const categories = await prisma.category.findMany({
+    where: { OR: [{ isSystem: true }, { userId: session.user.id }] },
     select: { id: true, name: true, color: true, isSystem: true },
     orderBy: { name: "asc" },
   });
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
   }
 
   const category = await prisma.category.create({
-    data: { name, color, isSystem: false },
+    data: { name, color, isSystem: false, userId: session.user.id },
     select: { id: true, name: true, color: true, isSystem: true },
   });
 
