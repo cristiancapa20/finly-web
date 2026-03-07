@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import {
   User, LogOut, ChevronDown, LayoutDashboard,
-  PlusCircle, History, Wallet, X, Menu, TrendingUp, HelpCircle,
+  PlusCircle, History, Wallet, X, Menu, TrendingUp, HelpCircle, HandCoins,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -36,6 +36,7 @@ const navLinks = [
   { href: "/dashboard",    label: "Dashboard",          icon: LayoutDashboard },
   { href: "/transactions", label: "Nueva transacción",  icon: PlusCircle },
   { href: "/historial",    label: "Historial",           icon: History },
+  { href: "/loans",        label: "Préstamos",           icon: HandCoins },
   { href: "/settings",     label: "Cuentas",              icon: Wallet },
   { href: "/help",         label: "Ayuda",               icon: HelpCircle },
 ];
