@@ -28,8 +28,10 @@ export default async function RootLayout({
         <body className={`${inter.className} bg-gray-50 min-h-screen`}>
           <Providers>
             {session && <Header />}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-              {children}
+            <main className={`${session ? "md:ml-64 pt-14 md:pt-0" : ""} min-h-screen`}>
+              <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                {children}
+              </div>
             </main>
             {session && <QuickTransactionButton />}
           </Providers>
