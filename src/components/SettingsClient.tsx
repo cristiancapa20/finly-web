@@ -26,9 +26,9 @@ interface Category {
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   CASH: "Efectivo",
-  BANK: "Banco",
-  CREDIT_CARD: "Tarjeta de crédito",
-  OTHER: "Otro",
+  BANK: "Ahorro",
+  CREDIT_CARD: "Crédito",
+  OTHER: "Corriente",
 };
 
 const ACCOUNT_TYPE_STYLES: Record<AccountType, { Icon: LucideIcon; color: string; bg: string }> = {
@@ -55,7 +55,9 @@ export default function SettingsClient() {
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
-  // Account form state
+  // Account modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createStep, setCreateStep] = useState<1 | 2>(1);
   const [newAccountName, setNewAccountName] = useState("");
   const [newAccountType, setNewAccountType] = useState<AccountType>("CASH");
   const [newAccountColor, setNewAccountColor] = useState("#1e3a5f");
@@ -103,8 +105,23 @@ export default function SettingsClient() {
     fetchCategories();
   }, [fetchAccounts, fetchCategories]);
 
-  async function handleCreateAccount(e: React.FormEvent) {
-    e.preventDefault();
+  function openCreateModal() {
+    setNewAccountName("");
+    setNewAccountType("CASH");
+    setNewAccountColor("#1e3a5f");
+    setNewAccountBalance("");
+    setAccountError("");
+    setCreateStep(1);
+    setShowCreateModal(true);
+  }
+
+  function closeCreateModal() {
+    setShowCreateModal(false);
+    setCreateStep(1);
+    setAccountError("");
+  }
+
+  async function handleCreateAccount() {
     setAccountError("");
     setSavingAccount(true);
     try {
@@ -118,10 +135,7 @@ export default function SettingsClient() {
         setAccountError(json.error ?? "Error al crear cuenta");
         return;
       }
-      setNewAccountName("");
-      setNewAccountType("CASH");
-      setNewAccountColor("#1e3a5f");
-      setNewAccountBalance("");
+      closeCreateModal();
       await fetchAccounts();
       toast.success({ title: "Cuenta creada exitosamente" });
     } finally {
@@ -232,15 +246,16 @@ export default function SettingsClient() {
                     style={{ backgroundColor: "#ffffff" }}
                   />
 
-                  {/* Top row */}
+                  {/* Top row: tipo + acciones */}
                   <div className="flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                        <Icon className="w-4 h-4 text-white" />
+                      <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+                        <Icon className="w-3.5 h-3.5 text-white" />
                       </div>
-                      <span className="text-white/80 text-xs font-medium tracking-wide uppercase">
-                        {ACCOUNT_TYPE_LABELS[account.type]}
-                      </span>
+                      <div>
+                        <p className="text-white/50 text-[10px] uppercase tracking-widest leading-none mb-0.5">Tipo</p>
+                        <p className="text-white/90 text-xs font-medium leading-none">{ACCOUNT_TYPE_LABELS[account.type]}</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-1">
                       <button
@@ -259,12 +274,18 @@ export default function SettingsClient() {
                     </div>
                   </div>
 
-                  {/* Account name + balance */}
-                  <div className="relative z-10 flex items-end justify-between">
-                    <p className="text-white font-semibold text-lg leading-tight truncate">{account.name}</p>
-                    <p className="text-white font-bold text-base leading-tight flex-shrink-0 ml-2">
-                      {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", minimumFractionDigits: 2 }).format(account.balance ?? 0)}
-                    </p>
+                  {/* Bottom: nombre + saldo */}
+                  <div className="relative z-10">
+                    <p className="text-white/50 text-[10px] uppercase tracking-widest leading-none mb-1">Nombre</p>
+                    <div className="flex items-end justify-between gap-2">
+                      <p className="text-white font-semibold text-base leading-tight truncate">{account.name}</p>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-white/50 text-[10px] uppercase tracking-widest leading-none mb-0.5">Saldo</p>
+                        <p className="text-white font-bold text-sm leading-tight">
+                          {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", minimumFractionDigits: 2 }).format(account.balance ?? 0)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -272,91 +293,14 @@ export default function SettingsClient() {
           </div>
         )}
 
-        {/* Create account form */}
-        <form onSubmit={handleCreateAccount} className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
-          <h3 className="text-sm font-medium text-gray-700">Nueva cuenta</h3>
-          {accountError && (
-            <p className="text-sm text-red-600">{accountError}</p>
-          )}
-          <div>
-            <label htmlFor="accountName" className="block text-xs text-gray-600 mb-1">
-              Nombre
-            </label>
-            <input
-              id="accountName"
-              type="text"
-              value={newAccountName}
-              onChange={(e) => setNewAccountName(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              placeholder="Ej: Cuenta corriente"
-            />
-          </div>
-          <div>
-            <label htmlFor="accountType" className="block text-xs text-gray-600 mb-1">
-              Tipo
-            </label>
-            <select
-              id="accountType"
-              value={newAccountType}
-              onChange={(e) => setNewAccountType(e.target.value as AccountType)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            >
-              {(Object.entries(ACCOUNT_TYPE_LABELS) as [AccountType, string][]).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="accountBalance" className="block text-xs text-gray-600 mb-1">
-              Saldo inicial <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="accountBalance"
-              type="number"
-              min="0"
-              step="0.01"
-              value={newAccountBalance}
-              onChange={(e) => setNewAccountBalance(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              placeholder="0.00"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-600 mb-2">Color de la tarjeta</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {CARD_COLORS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => setNewAccountColor(color)}
-                  className={`w-7 h-7 rounded-full border-2 transition-transform ${
-                    newAccountColor === color ? "border-gray-800 scale-110" : "border-transparent hover:scale-105"
-                  }`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">O elige un color:</span>
-              <input
-                type="color"
-                value={newAccountColor}
-                onChange={(e) => setNewAccountColor(e.target.value)}
-                className="w-8 h-8 rounded cursor-pointer border border-gray-300"
-              />
-              <span className="inline-block w-5 h-5 rounded-full border border-gray-200" style={{ backgroundColor: newAccountColor }} />
-            </div>
-          </div>
-          <button
-            type="submit"
-            disabled={savingAccount || !newAccountName.trim() || newAccountBalance === ""}
-            className="w-full bg-indigo-600 text-white text-sm font-medium py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {savingAccount ? "Creando..." : "Crear cuenta"}
-          </button>
-        </form>
+        {/* Nueva cuenta button */}
+        <button
+          onClick={openCreateModal}
+          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-indigo-300 text-indigo-600 text-sm font-medium py-3 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition-colors"
+        >
+          <span className="text-lg leading-none">+</span>
+          Nueva cuenta bancaria
+        </button>
       </section>
 
       {/* Categories Section */}
@@ -502,6 +446,163 @@ export default function SettingsClient() {
           </button>
         </form>
       </section>
+      {/* Create Account Modal */}
+      {showCreateModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) closeCreateModal(); }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-gray-800">Nueva cuenta</h3>
+              <button onClick={closeCreateModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Step indicator */}
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="flex items-center gap-1.5">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${createStep === 1 ? "bg-indigo-600 text-white" : "bg-indigo-100 text-indigo-600"}`}>1</div>
+                <span className={`text-xs font-medium ${createStep === 1 ? "text-indigo-600" : "text-gray-400"}`}>Información</span>
+              </div>
+              <div className="w-8 h-px bg-gray-300" />
+              <div className="flex items-center gap-1.5">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${createStep === 2 ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-400"}`}>2</div>
+                <span className={`text-xs font-medium ${createStep === 2 ? "text-indigo-600" : "text-gray-400"}`}>Saldo</span>
+              </div>
+            </div>
+
+            {/* Step 1 */}
+            {createStep === 1 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Nombre o apodo <span className="text-gray-400">(para identificarla)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newAccountName}
+                    onChange={(e) => setNewAccountName(e.target.value)}
+                    autoFocus
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    placeholder="Ej: Pichincha, Mi tarjeta de crédito, Cartera..."
+                  />
+                  <p className="text-[11px] text-gray-400 mt-1">Puede ser el nombre del banco o un apodo personalizado.</p>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Tipo de cuenta
+                  </label>
+                  <select
+                    value={newAccountType}
+                    onChange={(e) => setNewAccountType(e.target.value as AccountType)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  >
+                    {(Object.entries(ACCOUNT_TYPE_LABELS) as [AccountType, string][]).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-gray-400 mt-1">Selecciona el tipo: ahorro, corriente, crédito o efectivo.</p>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-2">Color de la tarjeta</label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {CARD_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => setNewAccountColor(color)}
+                        className={`w-7 h-7 rounded-full border-2 transition-transform ${newAccountColor === color ? "border-gray-800 scale-110" : "border-transparent hover:scale-105"}`}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">O elige:</span>
+                    <input
+                      type="color"
+                      value={newAccountColor}
+                      onChange={(e) => setNewAccountColor(e.target.value)}
+                      className="w-8 h-8 rounded cursor-pointer border border-gray-300"
+                    />
+                    <span className="inline-block w-5 h-5 rounded-full border border-gray-200" style={{ backgroundColor: newAccountColor }} />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={!newAccountName.trim()}
+                  onClick={() => setCreateStep(2)}
+                  className="w-full bg-indigo-600 text-white text-sm font-medium py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-1"
+                >
+                  Siguiente
+                  <span>→</span>
+                </button>
+              </div>
+            )}
+
+            {/* Step 2 */}
+            {createStep === 2 && (
+              <div className="space-y-4">
+                {/* Preview card */}
+                <div
+                  className="relative rounded-xl overflow-hidden h-20 px-4 py-3 flex flex-col justify-between"
+                  style={{ background: `linear-gradient(135deg, ${newAccountColor}ee, ${newAccountColor}99)` }}
+                >
+                  <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full bg-white/20" />
+                  {(() => { const { Icon } = ACCOUNT_TYPE_STYLES[newAccountType]; return (
+                    <div className="flex items-center gap-1.5 relative z-10">
+                      <Icon className="w-3.5 h-3.5 text-white/80" />
+                      <span className="text-white/70 text-xs uppercase tracking-wide">{ACCOUNT_TYPE_LABELS[newAccountType]}</span>
+                    </div>
+                  ); })()}
+                  <p className="text-white font-semibold text-sm relative z-10 truncate">{newAccountName}</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Saldo inicial <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newAccountBalance}
+                    onChange={(e) => setNewAccountBalance(e.target.value)}
+                    autoFocus
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                {accountError && (
+                  <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{accountError}</p>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCreateStep(1)}
+                    className="flex-1 border border-gray-300 text-gray-600 text-sm font-medium py-2 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    ← Atrás
+                  </button>
+                  <button
+                    type="button"
+                    disabled={savingAccount || newAccountBalance === ""}
+                    onClick={handleCreateAccount}
+                    className="flex-1 bg-indigo-600 text-white text-sm font-medium py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                  >
+                    {savingAccount ? "Creando..." : "Crear cuenta"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Edit Account Modal */}
       {editingAccount && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
