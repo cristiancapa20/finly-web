@@ -133,6 +133,10 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.contactName.trim() || !form.amount) return;
+    if (form.type === "OWED" && form.dueDate && form.dueDate < today()) {
+      toast.error({ title: "Fecha inválida", description: "La fecha de vencimiento no puede ser anterior a hoy." });
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/loans", {
@@ -178,7 +182,11 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
               <button
                 key={val}
                 type="button"
-                onClick={() => setForm(f => ({ ...f, type: val }))}
+                onClick={() => setForm(f => ({
+                  ...f,
+                  type: val,
+                  dueDate: val === "OWED" && f.dueDate && f.dueDate < today() ? "" : f.dueDate,
+                }))}
                 className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${form.type === val ? cls : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"}`}
               >
                 {label}
@@ -222,9 +230,13 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
             <input
               type="date"
               value={form.dueDate}
-              onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))}
+              min={form.type === "OWED" ? today() : undefined}
+              onChange={e => setForm(f => ({ ...f, dueDate: e.target.value, reminderDays: "" }))}
               className={inputCls}
             />
+            {form.type === "OWED" && (
+              <p className="text-xs text-gray-400 mt-1">Las deudas deben vencer a partir de hoy.</p>
+            )}
           </div>
 
           {/* Reminder */}
