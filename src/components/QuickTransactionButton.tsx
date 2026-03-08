@@ -230,7 +230,7 @@ export default function QuickTransactionButton() {
   return (
     <>
       {/* ── Floating Action Button ── */}
-      <div className="fixed bottom-6 right-6 z-40 group flex items-center">
+      <div className="fixed bottom-20 right-6 z-40 group flex items-center">
         {/* Tooltip */}
         <span className="mr-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg shadow-lg
           opacity-0 translate-x-2 pointer-events-none
