@@ -16,6 +16,8 @@ import {
   Download,
   CalendarDays,
   ArrowUpDown,
+  DollarSign,
+  AlignLeft,
 } from "lucide-react";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 
@@ -154,7 +156,7 @@ function DeleteButton({
   return (
     <button
       onClick={() => onRequestDelete(id)}
-      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+      className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
       title="Eliminar transacción"
     >
       <Trash2 className="w-4 h-4" />
@@ -583,7 +585,7 @@ export default function TransactionList() {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden sm:block bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+          <div className="hidden sm:block bg-white rounded-lg border border-gray-200 shadow-sm overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -591,7 +593,7 @@ export default function TransactionList() {
                     <span className="inline-flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" />Fecha</span>
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Descripción
+                    <span className="inline-flex items-center gap-1"><AlignLeft className="w-3.5 h-3.5" />Descripción</span>
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <span className="inline-flex items-center gap-1"><Tag className="w-3.5 h-3.5" />Categoría</span>
@@ -603,9 +605,11 @@ export default function TransactionList() {
                     <span className="inline-flex items-center gap-1"><ArrowUpDown className="w-3.5 h-3.5" />Tipo</span>
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Monto
+                    <span className="inline-flex items-center justify-end gap-1"><DollarSign className="w-3.5 h-3.5" />Monto</span>
                   </th>
-                  <th className="px-4 py-3" />
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
@@ -647,7 +651,7 @@ export default function TransactionList() {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => setEditingTransaction(t)}
-                          className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                          className="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                           title="Editar transacción"
                         >
                           <Pencil className="w-4 h-4" />
