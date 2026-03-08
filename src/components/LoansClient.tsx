@@ -329,6 +329,7 @@ function LoanCard({
 }) {
   const [showPayments, setShowPayments] = useState(false);
   const [showAddPayment, setShowAddPayment] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
@@ -482,19 +483,30 @@ function LoanCard({
                 {loan.payments.length} pago{loan.payments.length !== 1 ? "s" : ""}
               </button>
             )}
-            {loan.status === "PAID" ? (
+            {confirmingDelete ? (
+              <div className="ml-auto flex items-center gap-1">
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="text-xs text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {deleting ? "..." : "Confirmar"}
+                </button>
+                <button
+                  onClick={() => setConfirmingDelete(false)}
+                  className="text-xs text-gray-500 hover:text-gray-700 px-2.5 py-1.5 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors disabled:opacity-50"
+                onClick={() => setConfirmingDelete(true)}
+                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                {deleting ? "..." : "Eliminar"}
+                Eliminar
               </button>
-            ) : (
-              <span className="ml-auto text-xs text-gray-400 italic self-center">
-                Para eliminar, completa el pago primero
-              </span>
             )}
           </div>
 
