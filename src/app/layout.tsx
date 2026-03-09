@@ -6,6 +6,7 @@ import Providers from "@/components/Providers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuickTransactionButton from "@/components/QuickTransactionButton";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ViewTransitions } from "next-view-transitions";
@@ -14,7 +15,18 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Finance Tracker",
-  description: "Personal finance tracker with AI-powered transaction parsing",
+  description: "Controla tus finanzas personales: gastos, ingresos, cuentas y préstamos",
+  manifest: "/manifest.json",
+  themeColor: "#4f46e5",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Finance Tracker",
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default async function RootLayout({
@@ -29,6 +41,7 @@ export default async function RootLayout({
       <html lang="es">
         <body className={`${inter.className} bg-gray-50 min-h-screen`}>
           <Providers>
+            <ServiceWorkerRegistrar />
             {session && <Header />}
             {session ? (
               <div className="md:ml-64 pt-14 md:pt-0 flex flex-col min-h-screen">
