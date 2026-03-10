@@ -239,14 +239,7 @@ export default function QuickTransactionButton() {
     <>
       {/* ── Floating Action Button ── */}
       {/* bottom-24 en móvil para quedar por encima del bottom nav (h-16) con margen */}
-      <div className="fixed bottom-20 md:bottom-6 right-6 z-40 group flex items-center">
-        {/* Tooltip */}
-        <span className="mr-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg shadow-lg
-          opacity-0 translate-x-2 pointer-events-none
-          group-hover:opacity-100 group-hover:translate-x-0
-          transition-all duration-200 whitespace-nowrap">
-          Registrar transacción
-        </span>
+      <div className="fixed bottom-20 md:bottom-6 right-6 z-40 flex items-center">
         <button
           onClick={() => setIsOpen(true)}
           className="w-14 h-14 rounded-full bg-indigo-600 text-white shadow-xl hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center"
