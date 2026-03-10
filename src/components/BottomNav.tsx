@@ -13,7 +13,7 @@ import { useIsPWA } from "@/hooks/useIsPWA";
 
 const tabs = [
   { href: "/dashboard", label: "Inicio",    icon: LayoutDashboard },
-  { href: "/historial", label: "Historial", icon: History },
+  { href: "/historial", label: "Transacciones", icon: History },
   { href: "/loans",     label: "Préstamos", icon: HandCoins },
   { href: "/cuentas",   label: "Cuentas",   icon: Wallet },
   { href: "/profile",   label: "Perfil",    icon: User },

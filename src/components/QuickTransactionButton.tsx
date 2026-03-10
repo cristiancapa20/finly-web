@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Plus, X } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { getCategoryIcon } from "@/lib/categoryIcons";
@@ -72,6 +73,7 @@ function CategoryBadge({ name, color }: { name: string; color: string }) {
 }
 
 export default function QuickTransactionButton() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen]             = useState(false);
   const [text, setText]                 = useState("");
   const [isParsing, setIsParsing]       = useState(false);
@@ -103,6 +105,12 @@ export default function QuickTransactionButton() {
   //       ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
   //   );
   // }, []);
+
+  /* ── cerrar modal al cambiar de ruta (navegación por bottom nav) ── */
+  useEffect(() => {
+    if (isOpen) handleClose();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   /* ── scroll lock + ESC close ── */
   useEffect(() => {
@@ -230,7 +238,8 @@ export default function QuickTransactionButton() {
   return (
     <>
       {/* ── Floating Action Button ── */}
-      <div className="fixed bottom-20 right-6 z-40 group flex items-center">
+      {/* bottom-24 en móvil para quedar por encima del bottom nav (h-16) con margen */}
+      <div className="fixed bottom-20 md:bottom-6 right-6 z-40 group flex items-center">
         {/* Tooltip */}
         <span className="mr-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg shadow-lg
           opacity-0 translate-x-2 pointer-events-none
@@ -247,8 +256,9 @@ export default function QuickTransactionButton() {
       </div>
 
       {/* ── Modal / Bottom Sheet ── */}
+      {/* z-[60] para quedar encima del bottom nav (z-50) en PWA móvil */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
