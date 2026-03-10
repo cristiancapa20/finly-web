@@ -15,7 +15,7 @@ const tabs = [
   { href: "/dashboard",    label: "Inicio",     icon: LayoutDashboard },
   { href: "/historial",    label: "Historial",  icon: History },
   { href: "/loans",        label: "Préstamos",  icon: HandCoins },
-  { href: "/settings",     label: "Cuentas",    icon: Wallet },
+  { href: "/cuentas",      label: "Cuentas",    icon: Wallet },
   { href: "/profile",      label: "Perfil",     icon: User },
 ];
 

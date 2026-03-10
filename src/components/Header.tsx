@@ -38,7 +38,7 @@ const navLinks = [
   { href: "/transactions", label: "Nueva transacción", icon: PlusCircle },
   { href: "/historial",    label: "Historial",          icon: History },
   { href: "/loans",        label: "Préstamos",          icon: HandCoins },
-  { href: "/settings",     label: "Cuentas",             icon: Wallet },
+  { href: "/cuentas",      label: "Cuentas",             icon: Wallet },
   { href: "/help",         label: "Ayuda",              icon: HelpCircle },
 ];
 
