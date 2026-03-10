@@ -4,7 +4,7 @@ import { Link } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  History,
+  ArrowLeftRight,
   HandCoins,
   Wallet,
   User,
@@ -13,7 +13,7 @@ import { useIsPWA } from "@/hooks/useIsPWA";
 
 const tabs = [
   { href: "/dashboard", label: "Inicio",    icon: LayoutDashboard },
-  { href: "/historial", label: "Transacciones", icon: History },
+  { href: "/historial", label: "Transacciones", icon: ArrowLeftRight },
   { href: "/loans",     label: "Préstamos", icon: HandCoins },
   { href: "/cuentas",   label: "Cuentas",   icon: Wallet },
   { href: "/profile",   label: "Perfil",    icon: User },
