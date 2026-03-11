@@ -69,7 +69,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     });
     if (!loan) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    await db.$transaction(async (tx: typeof prisma) => {
+    await db.$transaction(async (tx: any) => {
       await tx.loan.delete({ where: { id: params.id } });
       await deleteBalanceTransaction(loan.balanceTransactionId, session.user.id, tx);
       await Promise.all(

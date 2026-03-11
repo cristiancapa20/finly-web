@@ -1,16 +1,16 @@
 import { sileo } from "sileo";
 
-const darkStyles = {
+const baseStyles = {
   fill: "#171717",
   styles: {
-    title: "text-white!",
-    description: "text-white/75!",
+    title: "!text-white",
+    description: "!text-white/80",
   },
 };
 
 export const toast = {
   success: (opts: { title: string; description?: string }) =>
-    sileo.success({ ...darkStyles, ...opts }),
+    sileo.success({ ...baseStyles, ...opts }),
   error: (opts: { title: string; description?: string }) =>
-    sileo.error({ ...darkStyles, ...opts }),
+    sileo.error({ ...baseStyles, ...opts }),
 };

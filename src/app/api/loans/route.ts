@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     }
 
     const amountInCents = amountInputToCents(amountNum);
-    const loan = await db.$transaction(async (tx: typeof prisma) => {
+    const loan = await db.$transaction(async (tx: any) => {
       const transaction = await createLoanBalanceTransaction({
         userId: session.user.id,
         accountId,
