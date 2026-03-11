@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { createLoanBalanceTransaction } from "@/lib/loanBalance";
+import { amountInputToCents, centsToAmount } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -40,9 +41,9 @@ export async function GET() {
       const remaining = Math.max(0, loan.amount - paid);
       return {
         ...loan,
-        amount: loan.amount / 100,
-        remaining: remaining / 100,
-        payments: loan.payments.map((p: any) => ({ ...p, amount: p.amount / 100 })),
+        amount: centsToAmount(loan.amount),
+        remaining: centsToAmount(remaining),
+        payments: loan.payments.map((p: any) => ({ ...p, amount: centsToAmount(p.amount) })),
       };
     });
 
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "La cuenta seleccionada no existe" }, { status: 400 });
     }
 
-    const amountInCents = Math.round(amountNum * 100);
+    const amountInCents = amountInputToCents(amountNum);
     const loan = await db.$transaction(async (tx: typeof prisma) => {
       const transaction = await createLoanBalanceTransaction({
         userId: session.user.id,
@@ -118,7 +119,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
-      data: { ...loan, amount: loan.amount / 100, remaining: loan.amount / 100, payments: [], account },
+      data: { ...loan, amount: centsToAmount(loan.amount), remaining: centsToAmount(loan.amount), payments: [], account },
     }, { status: 201 });
   } catch (error) {
     console.error("POST /api/loans error:", error);

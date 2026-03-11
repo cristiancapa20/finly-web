@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+import { amountInputToCents, centsToAmount } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
@@ -25,7 +26,7 @@ export async function PATCH(
   const updated = await prisma.transaction.update({
     where: { id },
     data: {
-      ...(amount !== undefined     ? { amount: Math.round(parseFloat(amount) * 100) / 100 } : {}),
+      ...(amount !== undefined     ? { amount: amountInputToCents(amount) } : {}),
       ...(type !== undefined        ? { type } : {}),
       ...(categoryId !== undefined  ? { categoryId } : {}),
       ...(accountId !== undefined   ? { accountId } : {}),
@@ -39,7 +40,12 @@ export async function PATCH(
     },
   });
 
-  return NextResponse.json({ data: updated });
+  return NextResponse.json({
+    data: {
+      ...updated,
+      amount: centsToAmount(updated.amount),
+    },
+  });
 }
 
 export async function DELETE(

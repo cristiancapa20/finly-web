@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+import { amountInputToCents } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
     if (category) {
       await prisma.transaction.create({
         data: {
-          amount: Math.round(balance * 100),
+          amount: amountInputToCents(balance),
           type: "INCOME",
           categoryId: category.id,
           accountId: account.id,

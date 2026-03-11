@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
+import { amountInputToCents, centsToAmount } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
 
   const data = transactions.map((t) => ({
     ...t,
-    amount: t.amount / 100,
+    amount: centsToAmount(t.amount),
   }));
 
   return NextResponse.json({ data, total, page, limit });
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
 
   const transaction = await prisma.transaction.create({
     data: {
-      amount: Math.round(amount * 100),
+      amount: amountInputToCents(amount),
       type,
       categoryId,
       accountId,
@@ -78,5 +79,5 @@ export async function POST(request: NextRequest) {
     include: { category: true, account: true },
   });
 
-  return NextResponse.json({ data: { ...transaction, amount: transaction.amount / 100 } }, { status: 201 });
+  return NextResponse.json({ data: { ...transaction, amount: centsToAmount(transaction.amount) } }, { status: 201 });
 }

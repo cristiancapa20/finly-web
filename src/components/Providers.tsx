@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "sileo";
+import { useIsPWA } from "@/hooks/useIsPWA";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -18,9 +19,12 @@ function useIsMobile() {
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
+  const isPWA = useIsPWA();
+  const toastPosition = isPWA ? "top-center" : isMobile ? "bottom-right" : "top-right";
+
   return (
     <SessionProvider>
-      <Toaster position={isMobile ? "top-center" : "top-right"} theme="dark" />
+      <Toaster position={toastPosition} theme="dark" />
       {children}
     </SessionProvider>
   );

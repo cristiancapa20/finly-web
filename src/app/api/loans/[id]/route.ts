@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { deleteBalanceTransaction } from "@/lib/loanBalance";
+import { amountInputToCents, centsToAmount } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -24,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       where: { id: params.id },
       data: {
         ...(contactName !== undefined && { contactName: contactName.trim() }),
-        ...(amount !== undefined && { amount: Math.round(parseFloat(amount) * 100) }),
+        ...(amount !== undefined && { amount: amountInputToCents(amount) }),
         ...(description !== undefined && { description: description?.trim() || null }),
         ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
         ...(status !== undefined && { status }),
@@ -42,9 +43,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({
       data: {
         ...updated,
-        amount: updated.amount / 100,
-        remaining: remaining / 100,
-        payments: updated.payments.map((p: any) => ({ ...p, amount: p.amount / 100 })),
+        amount: centsToAmount(updated.amount),
+        remaining: centsToAmount(remaining),
+        payments: updated.payments.map((p: any) => ({ ...p, amount: centsToAmount(p.amount) })),
       },
     });
   } catch (error) {

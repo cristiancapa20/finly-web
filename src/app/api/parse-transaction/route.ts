@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+import { resolveEntityIdByName } from "@/lib/entityMatching";
 import { prisma } from "@/lib/prisma";
 
 const anthropic = new Anthropic();
@@ -20,8 +21,14 @@ export async function POST(request: NextRequest) {
   }
 
   const [categories, accounts] = await Promise.all([
-    prisma.category.findMany({ select: { id: true, name: true } }),
-    prisma.account.findMany({ select: { id: true, name: true } }),
+    prisma.category.findMany({
+      where: { OR: [{ isSystem: true }, { userId: session.user.id }] },
+      select: { id: true, name: true },
+    }),
+    prisma.account.findMany({
+      where: { userId: session.user.id },
+      select: { id: true, name: true },
+    }),
   ]);
 
   const categoryList = categories.map((c) => c.name).join(", ");
@@ -76,13 +83,8 @@ Transaction text: "${text}"`;
     );
   }
 
-  const categoryId = parsed.categoryName
-    ? (categories.find((c) => c.name === parsed.categoryName)?.id ?? null)
-    : null;
-
-  const accountId = parsed.accountName
-    ? (accounts.find((a) => a.name === parsed.accountName)?.id ?? null)
-    : null;
+  const categoryId = resolveEntityIdByName(categories, parsed.categoryName);
+  const accountId = resolveEntityIdByName(accounts, parsed.accountName);
 
   return NextResponse.json({
     amount: parsed.amount ?? null,
