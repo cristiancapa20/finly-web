@@ -25,3 +25,4 @@ build/
 tsconfig.tsbuildinfo
 node_modules/
 .vercel
+prisma/prisma/
