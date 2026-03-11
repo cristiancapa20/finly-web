@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+import { createLoanBalanceTransaction } from "@/lib/loanBalance";
 import { amountInputToCents, centsToAmount } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 
@@ -15,9 +16,21 @@ export async function GET() {
     const loans = await db.loan.findMany({
       where: { userId: session.user.id },
       include: {
+        account: {
+          select: { id: true, name: true },
+        },
         payments: {
           orderBy: { date: "desc" },
-          select: { id: true, amount: true, date: true, note: true, createdAt: true },
+          select: {
+            id: true,
+            amount: true,
+            date: true,
+            note: true,
+            createdAt: true,
+            account: {
+              select: { id: true, name: true },
+            },
+          },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -47,10 +60,10 @@ export async function POST(req: NextRequest) {
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    const { type, contactName, amount, description, dueDate, reminderDays } = body;
+    const { type, contactName, amount, description, dueDate, reminderDays, accountId } = body;
 
-    if (!type || !contactName || amount === undefined) {
-      return NextResponse.json({ error: "type, contactName y amount son requeridos" }, { status: 400 });
+    if (!type || !contactName || amount === undefined || !accountId) {
+      return NextResponse.json({ error: "type, contactName, amount y accountId son requeridos" }, { status: 400 });
     }
     if (!["LENT", "OWED"].includes(type)) {
       return NextResponse.json({ error: "type debe ser LENT u OWED" }, { status: 400 });
@@ -59,23 +72,54 @@ export async function POST(req: NextRequest) {
     if (isNaN(amountNum) || amountNum <= 0) {
       return NextResponse.json({ error: "El monto debe ser mayor a 0" }, { status: 400 });
     }
+    const account = await db.account.findFirst({
+      where: { id: accountId, userId: session.user.id },
+      select: { id: true, name: true },
+    });
+    if (!account) {
+      return NextResponse.json({ error: "La cuenta seleccionada no existe" }, { status: 400 });
+    }
 
-    const loan = await db.loan.create({
-      data: {
+    const amountInCents = amountInputToCents(amountNum);
+    const loan = await db.$transaction(async (tx: typeof prisma) => {
+      const transaction = await createLoanBalanceTransaction({
+        userId: session.user.id,
+        accountId,
         type,
         contactName: contactName.trim(),
-        amount: amountInputToCents(amountNum),
-        description: description?.trim() || null,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        reminderDays: reminderDays ? parseInt(reminderDays) : null,
-        status: "ACTIVE",
-        userId: session.user.id,
-      },
-      select: { id: true, type: true, contactName: true, amount: true, description: true, dueDate: true, status: true, reminderDays: true, createdAt: true },
+        amountInCents,
+        db: tx,
+      });
+
+      return tx.loan.create({
+        data: {
+          type,
+          contactName: contactName.trim(),
+          amount: amountInCents,
+          description: description?.trim() || null,
+          dueDate: dueDate ? new Date(dueDate) : null,
+          reminderDays: reminderDays ? parseInt(reminderDays) : null,
+          status: "ACTIVE",
+          accountId,
+          balanceTransactionId: transaction.id,
+          userId: session.user.id,
+        },
+        select: {
+          id: true,
+          type: true,
+          contactName: true,
+          amount: true,
+          description: true,
+          dueDate: true,
+          status: true,
+          reminderDays: true,
+          createdAt: true,
+        },
+      });
     });
 
     return NextResponse.json({
-      data: { ...loan, amount: centsToAmount(loan.amount), remaining: centsToAmount(loan.amount), payments: [] },
+      data: { ...loan, amount: centsToAmount(loan.amount), remaining: centsToAmount(loan.amount), payments: [], account },
     }, { status: 201 });
   } catch (error) {
     console.error("POST /api/loans error:", error);

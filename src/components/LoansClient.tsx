@@ -11,6 +11,12 @@ interface LoanPayment {
   date: string;
   note: string | null;
   createdAt: string;
+  account: LoanAccount | null;
+}
+
+interface LoanAccount {
+  id: string;
+  name: string;
 }
 
 interface Loan {
@@ -25,6 +31,7 @@ interface Loan {
   reminderDays: number | null;
   createdAt: string;
   payments: LoanPayment[];
+  account: LoanAccount | null;
 }
 
 const fmt = (n: number) =>
@@ -68,12 +75,21 @@ function ProgressBar({ total, remaining }: { total: number; remaining: number })
 
 /* ─── New Loan Modal ─── */
 function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: (loan: Loan) => void }) {
-  const [form, setForm] = useState({ type: "OWED", contactName: "", amount: "", dueDate: "", description: "", reminderDays: "" });
+  const [form, setForm] = useState({ type: "OWED", contactName: "", amount: "", dueDate: "", description: "", reminderDays: "", accountId: "" });
+  const [accounts, setAccounts] = useState<LoanAccount[]>([]);
+  const [accountsLoaded, setAccountsLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/accounts")
+      .then((r) => r.json())
+      .then((data) => setAccounts(data.data ?? []))
+      .finally(() => setAccountsLoaded(true));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.contactName.trim() || !form.amount) return;
+    if (!form.contactName.trim() || !form.amount || !form.accountId) return;
     if (form.type === "OWED" && form.dueDate && form.dueDate < today()) {
       toast.error({ title: "Fecha inválida", description: "La fecha de vencimiento no puede ser anterior a hoy." });
       return;
@@ -90,6 +106,7 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
           dueDate: form.dueDate || null,
           description: form.description || null,
           reminderDays: form.reminderDays ? parseInt(form.reminderDays) : null,
+          accountId: form.accountId,
         }),
       });
       const data = await res.json();
@@ -165,6 +182,27 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
             />
           </div>
 
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {form.type === "OWED" ? "Cuenta donde recibiste el dinero" : "Cuenta desde la que prestaste"}
+            </label>
+            <select
+              value={form.accountId}
+              onChange={e => setForm(f => ({ ...f, accountId: e.target.value }))}
+              className={inputCls}
+              required
+              disabled={!accountsLoaded || accounts.length === 0}
+            >
+              <option value="">{accountsLoaded ? "Selecciona una cuenta" : "Cargando cuentas..."}</option>
+              {accounts.map((account) => (
+                <option key={account.id} value={account.id}>{account.name}</option>
+              ))}
+            </select>
+            {accountsLoaded && accounts.length === 0 && (
+              <p className="text-xs text-amber-600 mt-1">Debes crear una cuenta antes de registrar préstamos o deudas.</p>
+            )}
+          </div>
+
           {/* Due date */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Fecha de vencimiento <span className="text-gray-400">(opcional)</span></label>
@@ -231,7 +269,7 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
           <div className="flex gap-3 pt-1">
             <button
               type="submit"
-              disabled={loading || !form.contactName.trim() || !form.amount}
+              disabled={loading || !form.contactName.trim() || !form.amount || !form.accountId || accounts.length === 0}
               className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? "Guardando..." : "Guardar"}
@@ -252,17 +290,31 @@ function AddPaymentModal({ loan, onClose, onAdded }: { loan: Loan; onClose: () =
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(today());
   const [note, setNote] = useState("");
+  const [accountId, setAccountId] = useState("");
+  const [accounts, setAccounts] = useState<LoanAccount[]>([]);
+  const [accountsLoaded, setAccountsLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/accounts")
+      .then((r) => r.json())
+      .then((data) => {
+        const fetchedAccounts = data.data ?? [];
+        setAccounts(fetchedAccounts);
+        setAccountId(loan.account?.id ?? fetchedAccounts[0]?.id ?? "");
+      })
+      .finally(() => setAccountsLoaded(true));
+  }, [loan.account?.id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!amount || !date) return;
+    if (!amount || !date || !accountId) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/loans/${loan.id}/payments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: parseFloat(amount), date, note: note || null }),
+        body: JSON.stringify({ amount: parseFloat(amount), date, note: note || null, accountId }),
       });
       const data = await res.json();
       if (!res.ok) { toast.error({ title: "Error", description: data.error }); return; }
@@ -301,11 +353,28 @@ function AddPaymentModal({ loan, onClose, onAdded }: { loan: Loan; onClose: () =
             <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls} required />
           </div>
           <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {loan.type === "LENT" ? "Cuenta donde recibiste el pago" : "Cuenta desde la que pagaste"}
+            </label>
+            <select
+              value={accountId}
+              onChange={e => setAccountId(e.target.value)}
+              className={inputCls}
+              required
+              disabled={!accountsLoaded || accounts.length === 0}
+            >
+              <option value="">{accountsLoaded ? "Selecciona una cuenta" : "Cargando cuentas..."}</option>
+              {accounts.map((account) => (
+                <option key={account.id} value={account.id}>{account.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Nota <span className="text-gray-400">(opcional)</span></label>
             <input type="text" value={note} onChange={e => setNote(e.target.value)} className={inputCls} placeholder="Ej: Transferencia, efectivo..." />
           </div>
           <div className="flex gap-3 pt-1">
-            <button type="submit" disabled={loading || !amount || !date} className="flex-1 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <button type="submit" disabled={loading || !amount || !date || !accountId || accounts.length === 0} className="flex-1 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {loading ? "Guardando..." : "Registrar pago"}
             </button>
             <button type="button" onClick={onClose} className="flex-1 py-2.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
@@ -444,6 +513,11 @@ function LoanCard({
 
           {/* Due date + createdAt */}
           <div className="flex items-center gap-2 flex-wrap text-xs">
+            {loan.account && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full border font-medium bg-indigo-50 text-indigo-700 border-indigo-200">
+                Cuenta inicial: {loan.account.name}
+              </span>
+            )}
             {due && (
               <span className={`inline-flex items-center px-2 py-0.5 rounded-full border font-medium ${due.cls}`}>
                 {due.label}
@@ -520,6 +594,7 @@ function LoanCard({
                     <span className="font-medium text-gray-900">{fmt(p.amount)}</span>
                     {p.note && <span className="text-gray-500 ml-1.5 text-xs">· {p.note}</span>}
                     <p className="text-xs text-gray-400">{fmtDate(p.date)}</p>
+                    {p.account && <p className="text-xs text-gray-400">Cuenta: {p.account.name}</p>}
                   </div>
                   <button
                     onClick={() => deletePayment(p.id)}

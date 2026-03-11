@@ -22,29 +22,35 @@ model User {
 }
 
 model Loan {
-  id          String        @id @default(cuid())
-  type        String        // "LENT" | "OWED"
-  contactName String
-  amount      Int           // total in cents
-  description String?
-  dueDate     DateTime?
-  status      String        @default("ACTIVE") // "ACTIVE" | "PAID"
-  reminderDays Int?         // notify X days before due date
-  userId      String
-  user        User          @relation(fields: [userId], references: [id])
-  payments    LoanPayment[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id                  String        @id @default(cuid())
+  type                String        // "LENT" | "OWED"
+  contactName         String
+  amount              Int           // total in cents
+  description         String?
+  dueDate             DateTime?
+  status              String        @default("ACTIVE") // "ACTIVE" | "PAID"
+  reminderDays        Int?          // notify X days before due date
+  accountId           String?
+  balanceTransactionId String?      @unique
+  userId              String
+  user                User          @relation(fields: [userId], references: [id])
+  account             Account?      @relation(fields: [accountId], references: [id])
+  payments            LoanPayment[]
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 }
 
 model LoanPayment {
-  id        String   @id @default(cuid())
-  loanId    String
-  loan      Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
-  amount    Int      // amount in cents
-  date      DateTime
-  note      String?
-  createdAt DateTime @default(now())
+  id                   String   @id @default(cuid())
+  loanId               String
+  accountId            String?
+  balanceTransactionId String?  @unique
+  loan                 Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  account              Account? @relation(fields: [accountId], references: [id])
+  amount               Int      // amount in cents
+  date                 DateTime
+  note                 String?
+  createdAt            DateTime @default(now())
 }
 
 model Category {
@@ -66,6 +72,8 @@ model Account {
   userId       String
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
+  loans        Loan[]
+  loanPayments LoanPayment[]
 }
 
 model Transaction {
