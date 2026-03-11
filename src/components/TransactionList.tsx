@@ -169,7 +169,7 @@ interface EditModalProps {
   categories: Category[];
   accounts: Account[];
   onClose: () => void;
-  onSaved: (updated: Transaction) => void;
+  onSaved: () => void | Promise<void>;
 }
 
 function EditModal({ transaction: t, categories, accounts, onClose, onSaved }: EditModalProps) {
@@ -204,9 +204,9 @@ function EditModal({ transaction: t, categories, accounts, onClose, onSaved }: E
         }),
       });
       if (res.ok) {
-        const { data } = await res.json();
+        await res.json();
         toast.success({ title: "Transacción actualizada" });
-        onSaved(data);
+        await onSaved();
       } else {
         toast.error({ title: "Error al actualizar la transacción" });
       }
@@ -297,11 +297,6 @@ export default function TransactionList() {
   const [isExporting, setIsExporting] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
-  function handleSaved(updated: Transaction) {
-    setTransactions((prev) => prev.map((t) => t.id === updated.id ? updated : t));
-    setEditingTransaction(null);
-  }
-
   useEffect(() => {
     Promise.all([
       fetch("/api/categories").then((r) => r.json()),
@@ -336,6 +331,11 @@ export default function TransactionList() {
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions]);
+
+  async function handleSaved() {
+    await fetchTransactions();
+    setEditingTransaction(null);
+  }
 
   function updateParams(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
