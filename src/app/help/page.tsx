@@ -3,7 +3,6 @@ import {
   UserPlus,
   Wallet,
   MessageSquareText,
-  Mic,
   Plus,
   History,
   LayoutDashboard,
@@ -72,22 +71,10 @@ const sections: Section[] = [
     link: { href: "/transactions", label: "Nueva transacción" },
   },
   {
-    id: "voz",
-    icon: Mic,
-    color: "rose",
-    title: "4. Usar el micrófono",
-    description: "En lugar de escribir, puedes hablar directamente para describir tu transacción.",
-    steps: [
-      { text: "Desde la pantalla de Nueva transacción o el botón flotante, haz clic en el ícono del micrófono." },
-      { text: 'Di tu transacción en voz alta, por ejemplo: "Me llegó un depósito de 200 dólares en mi cuenta del banco".' },
-      { text: "El micrófono se detiene solo al terminar de hablar y procesa automáticamente.", tip: "Esta función está disponible en Chrome y Edge. En Safari o Firefox usa el campo de texto." },
-    ],
-  },
-  {
     id: "boton-flotante",
     icon: Plus,
     color: "emerald",
-    title: "5. Botón flotante de acceso rápido",
+    title: "4. Botón flotante de acceso rápido",
     description: "El botón + en la esquina inferior derecha te permite registrar transacciones desde cualquier página.",
     steps: [
       { text: "Haz clic en el botón circular índigo en la esquina inferior derecha de cualquier página." },
@@ -99,7 +86,7 @@ const sections: Section[] = [
     id: "historial",
     icon: History,
     color: "amber",
-    title: "6. Ver el historial",
+    title: "5. Ver el historial",
     description: "El historial muestra todas tus transacciones con opciones de filtrado y exportación.",
     steps: [
       { text: 'Ve a "Historial" desde el menú de navegación.' },
@@ -113,7 +100,7 @@ const sections: Section[] = [
     id: "dashboard",
     icon: LayoutDashboard,
     color: "cyan",
-    title: "7. Dashboard",
+    title: "6. Dashboard",
     description: "El dashboard muestra un resumen visual de tus finanzas.",
     steps: [
       { text: "Desde el Dashboard puedes ver el balance total, ingresos y gastos del mes." },
@@ -126,7 +113,7 @@ const sections: Section[] = [
     id: "perfil",
     icon: Settings,
     color: "slate",
-    title: "8. Perfil y configuración",
+    title: "7. Perfil y configuración",
     description: "Personaliza tu cuenta y gestiona tus categorías.",
     steps: [
       { text: "Desde tu avatar en el menú accede a tu perfil para cambiar tu nombre y foto." },
