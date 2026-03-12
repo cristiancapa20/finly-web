@@ -735,7 +735,7 @@ export default function LoansClient() {
             <button
               key={val}
               onClick={() => setTab(val)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-md transition-all ${tab === val ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+              className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-md transition-all ${tab === val ? (val === "OWED" ? "bg-red-100 shadow-sm text-red-700" : "bg-green-100 shadow-sm text-green-700") : "text-gray-500 hover:text-gray-700"}`}
             >
               {label}
               {count > 0 && (
