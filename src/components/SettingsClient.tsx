@@ -343,7 +343,13 @@ export default function SettingsClient() {
         {/* Tab switcher */}
         <div className="flex gap-2 mb-3">
           <button
-            onClick={() => setCategoryTab("system")}
+            onClick={() => {
+              if (document.startViewTransition) {
+                document.startViewTransition(() => setCategoryTab("system"));
+              } else {
+                setCategoryTab("system");
+              }
+            }}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border flex items-center gap-1.5 ${
               categoryTab === "system"
                 ? "bg-indigo-600 text-white border-indigo-600"
@@ -356,7 +362,13 @@ export default function SettingsClient() {
             </span>
           </button>
           <button
-            onClick={() => setCategoryTab("custom")}
+            onClick={() => {
+              if (document.startViewTransition) {
+                document.startViewTransition(() => setCategoryTab("custom"));
+              } else {
+                setCategoryTab("custom");
+              }
+            }}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border flex items-center gap-1.5 ${
               categoryTab === "custom"
                 ? "bg-indigo-600 text-white border-indigo-600"
