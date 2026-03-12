@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Wallet, TrendingUp, TrendingDown } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import {
   PieChart,
@@ -266,7 +267,10 @@ export default function DashboardClient() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-lg shadow p-5">
-            <p className="text-sm text-gray-500 mb-1">Balance del mes</p>
+            <div className="flex items-center gap-2 mb-1">
+              <Wallet className={`w-5 h-5 ${(monthStats?.balance ?? 0) >= 0 ? "text-indigo-600" : "text-red-600"}`} />
+              <p className="text-sm text-gray-500">Balance del mes</p>
+            </div>
             <p
               className={`text-2xl font-bold ${
                 (monthStats?.balance ?? 0) >= 0 ? "text-indigo-600" : "text-red-600"
@@ -276,13 +280,19 @@ export default function DashboardClient() {
             </p>
           </div>
           <div className="bg-white rounded-lg shadow p-5">
-            <p className="text-sm text-gray-500 mb-1">Total Ingresos</p>
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="w-5 h-5 text-green-600" />
+              <p className="text-sm text-gray-500">Total Ingresos</p>
+            </div>
             <p className="text-2xl font-bold text-green-600">
               {formatCurrency(monthStats?.totalIncome ?? 0)}
             </p>
           </div>
           <div className="bg-white rounded-lg shadow p-5">
-            <p className="text-sm text-gray-500 mb-1">Total Gastos</p>
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingDown className="w-5 h-5 text-red-600" />
+              <p className="text-sm text-gray-500">Total Gastos</p>
+            </div>
             <p className="text-2xl font-bold text-red-600">
               {formatCurrency(monthStats?.totalExpenses ?? 0)}
             </p>
