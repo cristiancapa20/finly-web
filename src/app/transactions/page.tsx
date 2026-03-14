@@ -11,7 +11,7 @@ export default async function TransactionsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-gray-900 mb-6">
         Nueva transacción
       </h1>
       <TransactionForm />
