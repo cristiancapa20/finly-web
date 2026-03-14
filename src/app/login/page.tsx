@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, HelpCircle, TrendingUp, BarChart2, Wallet, HandCoins, Bell } from "lucide-react";
 import { toast } from "@/lib/toast";
 import Link from "next/link";
+import UsageGuideModal from "@/components/UsageGuideModal";
 
 const features = [
   {
@@ -50,6 +51,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,6 +76,7 @@ export default function LoginPage() {
   }
 
   return (
+    <>
     <div className="h-screen flex">
       {/* ── Left panel: branding (desktop only) ── */}
       <div className="hidden lg:flex lg:w-[46%] bg-gradient-to-br from-indigo-700 via-indigo-800 to-indigo-900 flex-col p-12 relative overflow-hidden">
@@ -133,13 +136,14 @@ export default function LoginPage() {
 
           {/* Card */}
           <div className="bg-white rounded-2xl shadow-lg p-8 relative">
-            <Link
-              href="/help"
+            <button
+              type="button"
+              onClick={() => setShowGuide(true)}
               className="absolute top-4 right-4 flex items-center gap-1.5 text-gray-400 hover:text-indigo-600 transition text-xs font-medium"
             >
               <HelpCircle className="w-4 h-4" />
               ¿Cómo usar la app?
-            </Link>
+            </button>
 
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-gray-900">Bienvenido de nuevo</h1>
@@ -217,5 +221,8 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+
+    {showGuide && <UsageGuideModal onClose={() => setShowGuide(false)} />}
+    </>
   );
 }
