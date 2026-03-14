@@ -39,7 +39,7 @@ const navLinks = [
   { href: "/historial",    label: "Transacciones",      icon: ArrowLeftRight },
   { href: "/loans",        label: "Préstamos",          icon: HandCoins },
   { href: "/cuentas",      label: "Cuentas",             icon: Wallet },
-  { href: "/help",         label: "Ayuda",              icon: HelpCircle },
+  { href: "/help",         label: "Guía de uso",        icon: HelpCircle },
 ];
 
 function SidebarContent({ pathname, onClose, session }: {
