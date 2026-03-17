@@ -108,7 +108,7 @@ function SidebarContent({ pathname, onClose, session }: {
           </Link>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
+            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium bg-red-500 text-white hover:bg-red-600 transition-colors"
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
             Salir
