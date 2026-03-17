@@ -156,7 +156,7 @@ function DeleteButton({
   return (
     <button
       onClick={() => onRequestDelete(id)}
-      className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+      className="p-1.5 rounded-md text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors"
       title="Eliminar transacción"
     >
       <Trash2 className="w-4 h-4" />
@@ -651,7 +651,7 @@ export default function TransactionList() {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => setEditingTransaction(t)}
-                          className="p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                          className="p-1.5 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                           title="Editar transacción"
                         >
                           <Pencil className="w-4 h-4" />
@@ -723,7 +723,7 @@ export default function TransactionList() {
                       <div className="flex items-center gap-0.5">
                         <button
                           onClick={() => setEditingTransaction(t)}
-                          className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          className="p-1.5 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                           title="Editar"
                         >
                           <Pencil className="w-3.5 h-3.5" />
