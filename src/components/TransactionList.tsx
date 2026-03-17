@@ -13,7 +13,7 @@ import {
   Trash2,
   Pencil,
   X,
-  Download,
+  // Download,
   CalendarDays,
   ArrowUpDown,
   DollarSign,
@@ -294,7 +294,7 @@ export default function TransactionList() {
   const [isLoading, setIsLoading] = useState(true);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
+  // const [isExporting, setIsExporting] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   useEffect(() => {
@@ -352,36 +352,36 @@ export default function TransactionList() {
     router.push(`${pathname}?${params}`);
   }
 
-  async function handleExportCsv() {
-    setIsExporting(true);
-    try {
-      const params = new URLSearchParams();
-      if (typeParam) params.set("type", typeParam);
-      if (categoryIdParam) params.set("categoryId", categoryIdParam);
-      if (accountIdParam) params.set("accountId", accountIdParam);
-      if (dateFromParam) params.set("dateFrom", dateFromParam);
-      if (dateToParam) params.set("dateTo", dateToParam);
-
-      const res = await fetch(`/api/transactions/export?${params}`);
-      if (!res.ok) return;
-
-      const blob = await res.blob();
-      const disposition = res.headers.get("Content-Disposition") ?? "";
-      const match = disposition.match(/filename="([^"]+)"/);
-      const filename = match ? match[1] : "transacciones.csv";
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } finally {
-      setIsExporting(false);
-    }
-  }
+  // async function handleExportCsv() {
+  //   setIsExporting(true);
+  //   try {
+  //     const params = new URLSearchParams();
+  //     if (typeParam) params.set("type", typeParam);
+  //     if (categoryIdParam) params.set("categoryId", categoryIdParam);
+  //     if (accountIdParam) params.set("accountId", accountIdParam);
+  //     if (dateFromParam) params.set("dateFrom", dateFromParam);
+  //     if (dateToParam) params.set("dateTo", dateToParam);
+  //
+  //     const res = await fetch(`/api/transactions/export?${params}`);
+  //     if (!res.ok) return;
+  //
+  //     const blob = await res.blob();
+  //     const disposition = res.headers.get("Content-Disposition") ?? "";
+  //     const match = disposition.match(/filename="([^"]+)"/);
+  //     const filename = match ? match[1] : "transacciones.csv";
+  //
+  //     const url = URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = filename;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     a.remove();
+  //     URL.revokeObjectURL(url);
+  //   } finally {
+  //     setIsExporting(false);
+  //   }
+  // }
 
   async function handleConfirmDelete(id: string) {
     setIsDeleting(true);
@@ -513,7 +513,7 @@ export default function TransactionList() {
             Limpiar filtros
           </button>
 
-          <div className="ml-auto self-end">
+          {/* <div className="ml-auto self-end">
             <button
               onClick={handleExportCsv}
               disabled={isExporting}
@@ -522,7 +522,7 @@ export default function TransactionList() {
               <Download className="w-4 h-4" />
               {isExporting ? "Exportando..." : "Exportar CSV"}
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
 
