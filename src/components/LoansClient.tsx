@@ -779,35 +779,82 @@ export default function LoansClient() {
             </div>
           ))}
         </div>
-      ) : displayed.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 ${tab === "OWED" ? "bg-red-50" : "bg-green-50"}`}>
-            {tab === "OWED" ? <CreditCard className="w-7 h-7 text-red-400" /> : <HandCoins className="w-7 h-7 text-green-400" />}
+      ) : (() => {
+        const active = displayed.filter(l => l.status === "ACTIVE");
+        const paid = displayed.filter(l => l.status === "PAID");
+        const noActive = active.length === 0;
+        const noPaid = paid.length === 0;
+
+        return noActive && noPaid ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 ${tab === "OWED" ? "bg-red-50" : "bg-green-50"}`}>
+              {tab === "OWED" ? <CreditCard className="w-7 h-7 text-red-400" /> : <HandCoins className="w-7 h-7 text-green-400" />}
+            </div>
+            <p className="text-gray-500 font-medium">
+              {tab === "LENT" ? "No tienes préstamos registrados" : "No tienes deudas registradas"}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              {tab === "LENT" ? "Aquí aparece el dinero que prestaste a otros" : "Aquí aparece el dinero que debes pagar"}
+            </p>
+            <button onClick={() => setShowNewModal(true)} className="mt-3 text-sm text-indigo-600 hover:text-indigo-800 font-medium underline">
+              Agregar uno
+            </button>
           </div>
-          <p className="text-gray-500 font-medium">
-            {tab === "LENT" ? "No tienes préstamos registrados" : "No tienes deudas registradas"}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            {tab === "LENT" ? "Aquí aparece el dinero que prestaste a otros" : "Aquí aparece el dinero que debes pagar"}
-          </p>
-          <button onClick={() => setShowNewModal(true)} className="mt-3 text-sm text-indigo-600 hover:text-indigo-800 font-medium underline">
-            Agregar uno
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {/* Active first, then paid */}
-          {[...displayed.filter(l => l.status === "ACTIVE"), ...displayed.filter(l => l.status === "PAID")].map(loan => (
-            <LoanCard
-              key={loan.id}
-              loan={loan}
-              onDelete={handleDelete}
-              onPaymentAdded={handlePaymentAdded}
-              onStatusToggled={handleStatusToggled}
-            />
-          ))}
-        </div>
-      )}
+        ) : (
+          <div className="space-y-6">
+            {/* Active section */}
+            {noActive ? (
+              <div className="flex flex-col items-center py-8 text-center">
+                <CheckCircle className="w-8 h-8 text-green-400 mb-2" />
+                <p className="text-sm text-gray-500 font-medium">
+                  {tab === "LENT" ? "Todos tus préstamos están pagados" : "Todas tus deudas están pagadas"}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${tab === "LENT" ? "bg-green-500" : "bg-red-500"}`} />
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    Pendientes
+                  </h3>
+                  <span className="text-xs text-gray-400">({active.length})</span>
+                </div>
+                {active.map(loan => (
+                  <LoanCard
+                    key={loan.id}
+                    loan={loan}
+                    onDelete={handleDelete}
+                    onPaymentAdded={handlePaymentAdded}
+                    onStatusToggled={handleStatusToggled}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Paid section */}
+            {!noPaid && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-gray-400" />
+                  <h3 className="text-sm font-semibold text-gray-500">
+                    {tab === "LENT" ? "Préstamos pagados" : "Deudas pagadas"}
+                  </h3>
+                  <span className="text-xs text-gray-400">({paid.length})</span>
+                </div>
+                {paid.map(loan => (
+                  <LoanCard
+                    key={loan.id}
+                    loan={loan}
+                    onDelete={handleDelete}
+                    onPaymentAdded={handlePaymentAdded}
+                    onStatusToggled={handleStatusToggled}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {showNewModal && (
         <NewLoanModal onClose={() => setShowNewModal(false)} onCreated={handleCreated} />
