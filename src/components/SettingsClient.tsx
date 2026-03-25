@@ -172,7 +172,7 @@ export default function SettingsClient() {
       const res = await fetch(`/api/accounts/${editingAccount.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName, color: editColor, balance: editBalance }),
+        body: JSON.stringify({ name: editName, color: editColor, initialBalance: editBalance }),
       });
       if (res.ok) {
         setEditingAccount(null);
