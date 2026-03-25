@@ -663,6 +663,8 @@ export default function LoansClient() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"OWED" | "LENT">("LENT");
+  /** Ver solo pendientes o solo ya pagadas dentro del tab Préstamos/Deudas */
+  const [statusTab, setStatusTab] = useState<"pending" | "paid">("pending");
   const [showNewModal, setShowNewModal] = useState(false);
 
   useEffect(() => {
@@ -683,6 +685,7 @@ export default function LoansClient() {
   function handleCreated(loan: Loan) {
     setLoans(prev => [loan, ...prev]);
     setTab(loan.type);
+    setStatusTab("pending");
   }
 
   function handleDelete(id: string) {
@@ -734,7 +737,10 @@ export default function LoansClient() {
           {([["LENT", "Préstamos", lent.length], ["OWED", "Deudas", owned.length]] as const).map(([val, label, count]) => (
             <button
               key={val}
-              onClick={() => setTab(val)}
+              onClick={() => {
+                setTab(val);
+                setStatusTab("pending");
+              }}
               className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-md transition-all ${tab === val ? (val === "OWED" ? "bg-red-100 shadow-sm text-red-700" : "bg-green-100 shadow-sm text-green-700") : "text-gray-500 hover:text-gray-700"}`}
             >
               {label}
@@ -755,6 +761,65 @@ export default function LoansClient() {
           <span className="sm:hidden">Nuevo</span>
         </button>
       </div>
+
+      {/* Pendientes / Pagadas (mismo tipo préstamo o deuda) */}
+      {!loading && (lent.length > 0 || owned.length > 0) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-gray-500 w-full sm:w-auto">Estado:</span>
+          <div className="flex bg-gray-100 rounded-lg p-1 gap-1 flex-1 sm:flex-initial min-w-0">
+            {(() => {
+              const activeCount = displayed.filter((l) => l.status === "ACTIVE").length;
+              const paidCount = displayed.filter((l) => l.status === "PAID").length;
+              const baseInactive = "text-gray-500 hover:text-gray-700";
+              const activePending =
+                tab === "LENT"
+                  ? "bg-white shadow-sm text-green-700 ring-1 ring-green-200/60"
+                  : "bg-white shadow-sm text-red-700 ring-1 ring-red-200/60";
+              const activePaid = "bg-white shadow-sm text-gray-700 ring-1 ring-gray-200";
+              return (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setStatusTab("pending")}
+                    className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 text-sm font-medium rounded-md transition-all flex-1 sm:flex-initial justify-center ${
+                      statusTab === "pending" ? activePending : baseInactive
+                    }`}
+                  >
+                    Pendientes
+                    <span
+                      className={`text-xs rounded-full px-1.5 py-0.5 font-semibold ${
+                        statusTab === "pending"
+                          ? tab === "OWED"
+                            ? "bg-red-100 text-red-600"
+                            : "bg-green-100 text-green-600"
+                          : "bg-gray-200 text-gray-500"
+                      }`}
+                    >
+                      {activeCount}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatusTab("paid")}
+                    className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 text-sm font-medium rounded-md transition-all flex-1 sm:flex-initial justify-center ${
+                      statusTab === "paid" ? activePaid : baseInactive
+                    }`}
+                  >
+                    Pagadas
+                    <span
+                      className={`text-xs rounded-full px-1.5 py-0.5 font-semibold ${
+                        statusTab === "paid" ? "bg-gray-200 text-gray-600" : "bg-gray-200 text-gray-500"
+                      }`}
+                    >
+                      {paidCount}
+                    </span>
+                  </button>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       {loading ? (
@@ -780,12 +845,12 @@ export default function LoansClient() {
           ))}
         </div>
       ) : (() => {
-        const active = displayed.filter(l => l.status === "ACTIVE");
-        const paid = displayed.filter(l => l.status === "PAID");
-        const noActive = active.length === 0;
-        const noPaid = paid.length === 0;
+        const active = displayed.filter((l) => l.status === "ACTIVE");
+        const paid = displayed.filter((l) => l.status === "PAID");
+        const noLoansInTab = active.length === 0 && paid.length === 0;
+        const list = statusTab === "pending" ? active : paid;
 
-        return noActive && noPaid ? (
+        return noLoansInTab ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 ${tab === "OWED" ? "bg-red-50" : "bg-green-50"}`}>
               {tab === "OWED" ? <CreditCard className="w-7 h-7 text-red-400" /> : <HandCoins className="w-7 h-7 text-green-400" />}
@@ -800,58 +865,63 @@ export default function LoansClient() {
               Agregar uno
             </button>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Active section */}
-            {noActive ? (
-              <div className="flex flex-col items-center py-8 text-center">
-                <CheckCircle className="w-8 h-8 text-green-400 mb-2" />
-                <p className="text-sm text-gray-500 font-medium">
-                  {tab === "LENT" ? "Todos tus préstamos están pagados" : "Todas tus deudas están pagadas"}
+        ) : list.length === 0 ? (
+          <div className="flex flex-col items-center py-12 text-center px-4">
+            {statusTab === "pending" ? (
+              <>
+                <CheckCircle className="w-10 h-10 text-green-400 mb-3" />
+                <p className="text-sm text-gray-600 font-medium">
+                  {tab === "LENT" ? "No hay préstamos pendientes" : "No hay deudas pendientes"}
                 </p>
-              </div>
+                <p className="text-xs text-gray-400 mt-1 max-w-sm">
+                  {paid.length > 0
+                    ? "Todo lo de esta categoría está pagado. Mirá la pestaña Pagadas para el historial."
+                    : tab === "LENT"
+                      ? "Cuando registres un préstamo aparecerá aquí."
+                      : "Cuando registres una deuda aparecerá aquí."}
+                </p>
+                {paid.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setStatusTab("paid")}
+                    className="mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                  >
+                    Ver pagadas ({paid.length})
+                  </button>
+                )}
+              </>
             ) : (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${tab === "LENT" ? "bg-green-500" : "bg-red-500"}`} />
-                  <h3 className="text-sm font-semibold text-gray-700">
-                    Pendientes
-                  </h3>
-                  <span className="text-xs text-gray-400">({active.length})</span>
-                </div>
-                {active.map(loan => (
-                  <LoanCard
-                    key={loan.id}
-                    loan={loan}
-                    onDelete={handleDelete}
-                    onPaymentAdded={handlePaymentAdded}
-                    onStatusToggled={handleStatusToggled}
-                  />
-                ))}
-              </div>
+              <>
+                <CheckCircle className="w-10 h-10 text-gray-300 mb-3" />
+                <p className="text-sm text-gray-600 font-medium">
+                  {tab === "LENT" ? "Aún no hay préstamos marcados como pagados" : "Aún no hay deudas marcadas como pagadas"}
+                </p>
+                <p className="text-xs text-gray-400 mt-1 max-w-sm">
+                  Cuando completes el pago total o marques como pagado, verás el registro aquí.
+                </p>
+                {active.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setStatusTab("pending")}
+                    className="mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                  >
+                    Ver pendientes ({active.length})
+                  </button>
+                )}
+              </>
             )}
-
-            {/* Paid section */}
-            {!noPaid && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-gray-400" />
-                  <h3 className="text-sm font-semibold text-gray-500">
-                    {tab === "LENT" ? "Préstamos pagados" : "Deudas pagadas"}
-                  </h3>
-                  <span className="text-xs text-gray-400">({paid.length})</span>
-                </div>
-                {paid.map(loan => (
-                  <LoanCard
-                    key={loan.id}
-                    loan={loan}
-                    onDelete={handleDelete}
-                    onPaymentAdded={handlePaymentAdded}
-                    onStatusToggled={handleStatusToggled}
-                  />
-                ))}
-              </div>
-            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {list.map((loan) => (
+              <LoanCard
+                key={loan.id}
+                loan={loan}
+                onDelete={handleDelete}
+                onPaymentAdded={handlePaymentAdded}
+                onStatusToggled={handleStatusToggled}
+              />
+            ))}
           </div>
         );
       })()}
