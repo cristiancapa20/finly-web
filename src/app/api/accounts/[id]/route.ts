@@ -12,15 +12,16 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await req.json();
-  const { name, color } = body;
+  const { name, color, initialBalance } = body;
 
   const account = await prisma.account.update({
     where: { id, userId: session.user.id },
     data: {
       ...(name ? { name } : {}),
       ...(color ? { color } : {}),
+      ...(initialBalance !== undefined && initialBalance !== "" ? { initialBalance: parseFloat(initialBalance) } : {}),
     },
-    select: { id: true, name: true, type: true, color: true },
+    select: { id: true, name: true, type: true, color: true, initialBalance: true },
   });
 
   return NextResponse.json({ data: account });

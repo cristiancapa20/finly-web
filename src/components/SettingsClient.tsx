@@ -70,6 +70,7 @@ export default function SettingsClient() {
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [editColor, setEditColor] = useState("#1e3a5f");
   const [editName, setEditName] = useState("");
+  const [editBalance, setEditBalance] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Category modal state
@@ -160,6 +161,7 @@ export default function SettingsClient() {
     setEditingAccount(account);
     setEditColor(account.color ?? "#1e3a5f");
     setEditName(account.name);
+    setEditBalance(account.balance !== undefined ? String(account.balance) : "");
   }
 
   async function handleSaveEdit(e: React.FormEvent) {
@@ -170,7 +172,7 @@ export default function SettingsClient() {
       const res = await fetch(`/api/accounts/${editingAccount.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName, color: editColor }),
+        body: JSON.stringify({ name: editName, color: editColor, balance: editBalance }),
       });
       if (res.ok) {
         setEditingAccount(null);
@@ -717,6 +719,18 @@ export default function SettingsClient() {
                   required
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Saldo actual</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editBalance}
+                  onChange={(e) => setEditBalance(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  placeholder="0.00"
+                />
+                <p className="text-[11px] text-gray-400 mt-1">Edita el saldo directamente si necesitas corregirlo.</p>
               </div>
               <div>
                 <label className="block text-xs text-gray-600 mb-2">Color</label>

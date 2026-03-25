@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
-import { amountInputToCents } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -12,16 +11,17 @@ export async function GET() {
     const accounts = await prisma.account.findMany({
       where: { userId: session.user.id },
       select: {
-        id: true, name: true, type: true, color: true,
+        id: true, name: true, type: true, color: true, initialBalance: true,
         transactions: { select: { amount: true, type: true } },
       },
       orderBy: { name: "asc" },
     });
 
-    const data = accounts.map(({ transactions, ...acc }) => {
-      const balance = transactions.reduce((sum, t) =>
+    const data = accounts.map(({ transactions, initialBalance, ...acc }) => {
+      const txBalance = transactions.reduce((sum, t) =>
         t.type === "INCOME" ? sum + t.amount : sum - t.amount, 0) / 100;
-      return { ...acc, balance: Math.round(balance * 100) / 100 };
+      const balance = Math.round((initialBalance + txBalance) * 100) / 100;
+      return { ...acc, balance, initialBalance };
     });
 
     return NextResponse.json({ data });
@@ -52,30 +52,15 @@ export async function POST(req: NextRequest) {
   }
 
   const account = await prisma.account.create({
-    data: { name, type, userId: session.user.id, ...(color ? { color } : {}) },
-    select: { id: true, name: true, type: true, color: true },
+    data: {
+      name,
+      type,
+      userId: session.user.id,
+      initialBalance: parseFloat(initialBalance) || 0,
+      ...(color ? { color } : {}),
+    },
+    select: { id: true, name: true, type: true, color: true, initialBalance: true },
   });
-
-  const balance = Number(initialBalance);
-  if (balance > 0) {
-    const category = await prisma.category.findFirst({
-      where: { OR: [{ userId: session.user.id }, { isSystem: true }] },
-      select: { id: true },
-    });
-    if (category) {
-      await prisma.transaction.create({
-        data: {
-          amount: amountInputToCents(balance),
-          type: "INCOME",
-          categoryId: category.id,
-          accountId: account.id,
-          userId: session.user.id,
-          description: "Saldo inicial",
-          date: new Date(),
-        },
-      });
-    }
-  }
 
   return NextResponse.json({ data: account }, { status: 201 });
 }

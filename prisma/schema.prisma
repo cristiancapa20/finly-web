@@ -65,15 +65,16 @@ model Category {
 }
 
 model Account {
-  id           String        @id @default(cuid())
-  name         String
-  type         String
-  color        String        @default("#1e3a5f")
-  userId       String
-  user         User          @relation(fields: [userId], references: [id])
-  transactions Transaction[]
-  loans        Loan[]
-  loanPayments LoanPayment[]
+  id             String        @id @default(cuid())
+  name           String
+  type           String
+  color          String        @default("#1e3a5f")
+  initialBalance Float         @default(0)
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  transactions   Transaction[]
+  loans          Loan[]
+  loanPayments   LoanPayment[]
 }
 
 model Transaction {
