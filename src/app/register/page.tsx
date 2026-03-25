@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Eye, EyeOff, Check, X, HelpCircle, TrendingUp, BarChart2, Wallet, HandCoins, Bell } from "lucide-react";
@@ -42,7 +42,7 @@ const features = [
   },
 ];
 
-export default function RegisterPage() {
+function RegisterPageInner() {
   const router = useRouter();
   const { status } = useSession();
   const searchParams = useSearchParams();
@@ -337,5 +337,13 @@ export default function RegisterPage() {
 
     {showGuide && <UsageGuideModal onClose={() => setShowGuide(false)} />}
     </>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterPageInner />
+    </Suspense>
   );
 }
