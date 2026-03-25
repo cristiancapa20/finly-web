@@ -39,6 +39,13 @@ export default function LoginPage() {
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const { status } = useSession();
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (status === "authenticated") {
@@ -48,13 +55,6 @@ export default function LoginPage() {
 
   // Evita que el formulario quede visible mientras redirige
   if (status === "authenticated") return null;
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

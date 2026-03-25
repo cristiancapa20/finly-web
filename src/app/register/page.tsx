@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Eye, EyeOff, Check, X, HelpCircle, TrendingUp, BarChart2, Wallet, HandCoins, Bell } from "lucide-react";
 import { toast } from "@/lib/toast";
@@ -48,15 +48,6 @@ export default function RegisterPage() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
-  // Redirigir si ya está autenticado
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.replace(callbackUrl);
-    }
-  }, [status, router, callbackUrl]);
-
-  if (status === "authenticated") return null;
-
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
@@ -66,6 +57,15 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace(callbackUrl);
+    }
+  }, [status, router, callbackUrl]);
+
+  if (status === "authenticated") return null;
 
   const passwordValid = passwordRules.every((r) => r.test(password));
   const confirmMatch = confirm.length > 0 && password === confirm;

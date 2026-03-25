@@ -126,16 +126,20 @@ export default function Header() {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isPWA = useIsPWA();
 
-  if (status === "loading" || !session) return null;
-
   // Lock body scroll when mobile sidebar is open
   useEffect(() => {
+    if (!session) return;
     document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
-  }, [menuOpen]);
+  }, [menuOpen, session]);
 
   // Close on route change
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
+  useEffect(() => {
+    if (!session) return;
+    setMenuOpen(false);
+  }, [pathname, session]);
+
+  if (status === "loading" || !session) return null;
 
   return (
     <>
