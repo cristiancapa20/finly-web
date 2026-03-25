@@ -122,9 +122,11 @@ function SidebarContent({ pathname, onClose, session }: {
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isPWA = useIsPWA();
+
+  if (status === "loading" || !session) return null;
 
   // Lock body scroll when mobile sidebar is open
   useEffect(() => {

@@ -10,6 +10,7 @@ import {
   User,
 } from "lucide-react";
 import { useIsPWA } from "@/hooks/useIsPWA";
+import { useSession } from "next-auth/react";
 
 const tabs = [
   { href: "/dashboard", label: "Inicio",    icon: LayoutDashboard },
@@ -20,9 +21,11 @@ const tabs = [
 ];
 
 export default function BottomNav() {
+  const { data: session, status } = useSession();
   const isPWA = useIsPWA();
   const pathname = usePathname();
 
+  if (status === "loading" || !session) return null;
   if (!isPWA) return null;
 
   return (

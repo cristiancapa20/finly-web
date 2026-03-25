@@ -42,9 +42,12 @@ export default function LoginPage() {
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard");
+      router.replace(callbackUrl);
     }
-  }, [status, router]);
+  }, [status, router, callbackUrl]);
+
+  // Evita que el formulario quede visible mientras redirige
+  if (status === "authenticated") return null;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -70,8 +73,7 @@ export default function LoginPage() {
       setError("Credenciales incorrectas. Intenta de nuevo.");
     } else {
       toast.success({ title: "Sesión iniciada" });
-      router.push(callbackUrl);
-      router.refresh();
+      router.replace(callbackUrl);
     }
   }
 

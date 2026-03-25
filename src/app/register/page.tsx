@@ -45,13 +45,17 @@ const features = [
 export default function RegisterPage() {
   const router = useRouter();
   const { status } = useSession();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard");
+      router.replace(callbackUrl);
     }
-  }, [status, router]);
+  }, [status, router, callbackUrl]);
+
+  if (status === "authenticated") return null;
 
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
