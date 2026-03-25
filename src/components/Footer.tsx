@@ -27,7 +27,7 @@ export default function Footer() {
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-indigo-400 shrink-0" />
-            <h3 className="font-semibold text-gray-900 text-base">Finance Tracker</h3>
+            <h3 className="font-semibold text-gray-900 text-base">FinlyCR</h3>
           </div>
           <p className="text-gray-500">
             Controla tus finanzas personales: gastos, ingresos, cuentas y préstamos.
@@ -72,7 +72,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="max-w-5xl mx-auto mt-6 pt-4 border-t border-gray-100 text-center text-gray-400 text-xs">
-        © {new Date().getFullYear()} Finance Tracker. Todos los derechos reservados.
+        © {new Date().getFullYear()} FinlyCR. Todos los derechos reservados.
       </div>
     </footer>
   );

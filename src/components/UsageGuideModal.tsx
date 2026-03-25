@@ -167,7 +167,7 @@ export default function UsageGuideModal({ onClose }: UsageGuideModalProps) {
             </div>
             <div>
               <h2 className="text-base font-bold text-gray-900">Guía de uso</h2>
-              <p className="text-xs text-gray-500">Todo lo que necesitas saber para usar Finance Tracker</p>
+              <p className="text-xs text-gray-500">Todo lo que necesitas saber para usar FinlyCR</p>
             </div>
           </div>
           <button

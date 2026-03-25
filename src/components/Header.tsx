@@ -57,7 +57,7 @@ function SidebarContent({ pathname, onClose, session }: {
           className="flex items-center gap-2.5 text-lg font-bold text-white"
         >
           <TrendingUp className="w-5 h-5 text-indigo-400" />
-          Finance Tracker
+          FinlyCR
         </Link>
         {onClose && (
           <button
@@ -154,7 +154,7 @@ export default function Header() {
           </button>
           <Link href="/dashboard" className="flex items-center gap-2 text-base font-bold text-white">
             <TrendingUp className="w-4 h-4 text-indigo-400" />
-            Finance Tracker
+            FinlyCR
           </Link>
         </header>
       )}

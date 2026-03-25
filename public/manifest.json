@@ -1,5 +1,5 @@
 {
-  "name": "Finance Tracker",
+  "name": "FinlyCR",
   "short_name": "Finance",
   "description": "Controla tus finanzas personales: gastos, ingresos, cuentas y préstamos",
   "start_url": "/dashboard",

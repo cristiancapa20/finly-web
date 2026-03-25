@@ -117,7 +117,7 @@ export default function RegisterPage() {
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-white" />
           </div>
-          <span className="text-white font-bold text-xl tracking-tight">Finance Tracker</span>
+          <span className="text-white font-bold text-xl tracking-tight">FinlyCR</span>
         </div>
 
         {/* Main copy + features — centered vertically in remaining space */}
@@ -160,7 +160,7 @@ export default function RegisterPage() {
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 text-white" />
               </div>
-              <span className="text-indigo-600 font-bold text-xl tracking-tight">Finance Tracker</span>
+              <span className="text-indigo-600 font-bold text-xl tracking-tight">FinlyCR</span>
             </div>
             <p className="text-gray-500 text-sm">Toma el control de tus finanzas</p>
           </div>

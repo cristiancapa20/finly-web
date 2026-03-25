@@ -86,7 +86,7 @@ export default function OnboardingModal() {
           <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mb-3">
             <TrendingUp className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-lg font-bold text-gray-900">¡Bienvenido a Finance Tracker!</h2>
+          <h2 className="text-lg font-bold text-gray-900">¡Bienvenido a FinlyCR!</h2>
           <p className="text-sm text-gray-500 mt-1">
             Para empezar, registra tu primera cuenta bancaria o de efectivo.
           </p>

@@ -16,14 +16,14 @@ import { ViewTransitions } from "next-view-transitions";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Finance Tracker",
+  title: "FinlyCR",
   description: "Controla tus finanzas personales: gastos, ingresos, cuentas y préstamos",
   manifest: "/manifest.json",
   themeColor: "#4f46e5",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Finance Tracker",
+    title: "FinlyCR",
   },
   icons: {
     icon: [

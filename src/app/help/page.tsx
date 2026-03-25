@@ -145,7 +145,7 @@ export default function HelpPage() {
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Guía de uso</h1>
         <p className="mt-2 text-gray-500 text-sm sm:text-base max-w-xl mx-auto">
-          Todo lo que necesitas saber para usar Finance Tracker y llevar el control de tus finanzas personales.
+          Todo lo que necesitas saber para usar FinlyCR y llevar el control de tus finanzas personales.
         </p>
 
         {/* Quick nav */}

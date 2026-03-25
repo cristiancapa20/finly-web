@@ -1,5 +1,5 @@
 {
-  "name": "Finance Tracker",
+  "name": "FinlyCR",
   "description": "Aplicación web personal para registrar transacciones financieras por texto o voz. Un LLM interpreta lenguaje natural y extrae campos automáticamente. Dashboard con gráficas, historial filtrable y exportación a CSV. Stack: Next.js 14 + TypeScript + Tailwind + Prisma + SQLite + NextAuth.",
   "branchName": "ralph/finance-tracker",
   "userStories": [

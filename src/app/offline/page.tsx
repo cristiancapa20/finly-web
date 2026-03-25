@@ -15,7 +15,7 @@ export default function OfflinePage() {
           <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
             <TrendingUp className="w-4 h-4 text-white" />
           </div>
-          <span className="text-indigo-600 font-bold text-lg">Finance Tracker</span>
+          <span className="text-indigo-600 font-bold text-lg">FinlyCR</span>
         </div>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Sin conexión</h1>
