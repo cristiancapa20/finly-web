@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "@/lib/toast";
 import { useSearchParams, usePathname } from "next/navigation";
@@ -37,11 +37,18 @@ interface Transaction {
   account: { id: string; name: string };
 }
 
+interface TransactionsListTotals {
+  totalIncome: number;
+  totalExpenses: number;
+  net: number;
+}
+
 interface TransactionsResponse {
   data: Transaction[];
   total: number;
   page: number;
   limit: number;
+  totals?: TransactionsListTotals;
 }
 
 const LIMIT = 20;
@@ -59,6 +66,15 @@ function formatDate(dateStr: string) {
 function formatAmount(amount: number, type: string) {
   const sign = type === "INCOME" ? "+" : "-";
   return `${sign}$${Math.abs(amount).toFixed(2)}`;
+}
+
+function formatBalancePlain(n: number) {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n);
 }
 
 function getDateParts(dateStr: string) {
@@ -287,6 +303,7 @@ export default function TransactionList() {
   const [accounts, setAccounts] = useState<AccountFilterChipItem[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [total, setTotal] = useState(0);
+  const [listTotals, setListTotals] = useState<TransactionsListTotals | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -319,6 +336,7 @@ export default function TransactionList() {
       if (!res.ok) {
         setTransactions([]);
         setTotal(0);
+        setListTotals(null);
         toast.error({ title: "No se pudieron cargar las transacciones" });
         return;
       }
@@ -329,15 +347,24 @@ export default function TransactionList() {
       } catch {
         setTransactions([]);
         setTotal(0);
+        setListTotals(null);
         toast.error({ title: "Respuesta inválida al cargar transacciones" });
         return;
       }
 
       setTransactions(data.data ?? []);
       setTotal(data.total ?? 0);
+      setListTotals(
+        data.totals ?? {
+          totalIncome: 0,
+          totalExpenses: 0,
+          net: 0,
+        }
+      );
     } catch {
       setTransactions([]);
       setTotal(0);
+      setListTotals(null);
       toast.error({ title: "Error de red al cargar transacciones" });
     } finally {
       setIsLoading(false);
@@ -418,6 +445,18 @@ export default function TransactionList() {
   }
 
   const totalPages = Math.ceil(total / LIMIT);
+
+  /** Saldo actual de la cuenta filtrada o suma de todas (mismo criterio que los chips). */
+  const cuentaSaldoResumen = useMemo(() => {
+    if (accounts.length === 0) return null;
+    if (accountIdParam) {
+      const a = accounts.find((x) => x.id === accountIdParam);
+      if (!a) return null;
+      return { label: `Saldo actual · ${a.name}`, amount: a.balance };
+    }
+    const sum = accounts.reduce((s, a) => s + a.balance, 0);
+    return { label: "Saldo actual · todas las cuentas", amount: sum };
+  }, [accounts, accountIdParam]);
 
   const formatAccountBalance = (amount: number) =>
     new Intl.NumberFormat("es-MX", {
@@ -671,6 +710,55 @@ export default function TransactionList() {
                   </tr>
                 ))}
               </tbody>
+              {listTotals !== null && total > 0 && (
+                <tfoot>
+                  <tr className="bg-gray-50 border-t-2 border-gray-200">
+                    <td colSpan={5} className="px-4 py-3 text-sm font-medium text-gray-700 text-right align-top">
+                      Totales
+                      <span className="block text-xs font-normal text-gray-500 mt-0.5 ml-auto">
+                        {total} {total === 1 ? "movimiento" : "movimientos"} con el filtro actual, sumando todas las páginas.
+                        {(dateFromParam || dateToParam) && (
+                          <span className="block text-gray-400 mt-1">
+                            El neto es solo del rango de fechas; el saldo de la cuenta es al día de hoy.
+                          </span>
+                        )}
+                      </span>
+                      {cuentaSaldoResumen && (
+                        <span className="block mt-2 text-sm font-semibold text-indigo-700 tabular-nums">
+                          {cuentaSaldoResumen.label}: {formatBalancePlain(cuentaSaldoResumen.amount)}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right align-top">
+                      <div className="text-xs space-y-1.5 tabular-nums">
+                        <div>
+                          <span className="text-gray-500">Ingresos </span>
+                          <span className="font-semibold text-green-600">
+                            {formatAmount(listTotals.totalIncome, "INCOME")}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Gastos </span>
+                          <span className="font-semibold text-red-600">
+                            {formatAmount(listTotals.totalExpenses, "EXPENSE")}
+                          </span>
+                        </div>
+                        <div className="pt-1 border-t border-gray-200">
+                          <span className="text-gray-500">Neto </span>
+                          <span
+                            className={`font-bold ${
+                              listTotals.net >= 0 ? "text-indigo-600" : "text-red-600"
+                            }`}
+                          >
+                            {listTotals.net >= 0 ? "+" : "-"}${Math.abs(listTotals.net).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3" aria-hidden />
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
 
@@ -745,6 +833,49 @@ export default function TransactionList() {
               );
             })}
           </div>
+
+          {listTotals !== null && total > 0 && (
+            <div className="sm:hidden bg-gray-50 rounded-xl border border-gray-200 p-4 space-y-2">
+              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Totales</p>
+              <p className="text-xs text-gray-500">
+                {total} {total === 1 ? "movimiento" : "movimientos"} con el filtro (todas las páginas).
+                {(dateFromParam || dateToParam) && (
+                  <span className="block text-gray-400 mt-1">
+                    Neto del rango de fechas; saldo de cuenta al hoy.
+                  </span>
+                )}
+              </p>
+              {cuentaSaldoResumen && (
+                <p className="text-sm font-semibold text-indigo-700 tabular-nums">
+                  {cuentaSaldoResumen.label}: {formatBalancePlain(cuentaSaldoResumen.amount)}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm tabular-nums">
+                <span>
+                  <span className="text-gray-500">Ingresos </span>
+                  <span className="font-semibold text-green-600">
+                    {formatAmount(listTotals.totalIncome, "INCOME")}
+                  </span>
+                </span>
+                <span>
+                  <span className="text-gray-500">Gastos </span>
+                  <span className="font-semibold text-red-600">
+                    {formatAmount(listTotals.totalExpenses, "EXPENSE")}
+                  </span>
+                </span>
+                <span>
+                  <span className="text-gray-500">Neto </span>
+                  <span
+                    className={`font-bold ${
+                      listTotals.net >= 0 ? "text-indigo-600" : "text-red-600"
+                    }`}
+                  >
+                    {listTotals.net >= 0 ? "+" : "-"}${Math.abs(listTotals.net).toFixed(2)}
+                  </span>
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (

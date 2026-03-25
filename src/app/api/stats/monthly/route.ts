@@ -1,7 +1,16 @@
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+
+function missingSoftDeleteColumn(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  return (
+    message.includes("Unknown argument `isDeleted`") ||
+    message.includes("no such column: main.Transaction.isDeleted")
+  );
+}
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -18,14 +27,27 @@ export async function GET(request: NextRequest) {
   const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
   const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      userId: session.user.id,
-      date: { gte: startDate, lt: endDate },
-      ...(accountId ? { accountId } : {}),
-    },
-    select: { amount: true, type: true, date: true },
-  });
+  const baseWhere: Prisma.TransactionWhereInput = {
+    userId: session.user.id,
+    date: { gte: startDate, lt: endDate },
+    ...(accountId ? { accountId } : {}),
+  };
+
+  const select = { amount: true, type: true, date: true } as const;
+
+  let transactions: Awaited<ReturnType<typeof prisma.transaction.findMany<{ select: typeof select }>>>;
+  try {
+    transactions = await prisma.transaction.findMany({
+      where: { ...baseWhere, isDeleted: false },
+      select,
+    });
+  } catch (error) {
+    if (!missingSoftDeleteColumn(error)) throw error;
+    transactions = await prisma.transaction.findMany({
+      where: baseWhere,
+      select,
+    });
+  }
 
   const monthMap = new Map<string, { income: number; expenses: number }>();
 

@@ -16,6 +16,57 @@ type TransactionListRow = {
   account: { id: string; name: string };
 };
 
+const listSelect = {
+  id: true,
+  amount: true,
+  type: true,
+  description: true,
+  date: true,
+  createdAt: true,
+  category: { select: { id: true, name: true, color: true } },
+  account: { select: { id: true, name: true } },
+} as const;
+
+function totalsFromGroupBy(grouped: { type: string; _sum: { amount: bigint | number | null } }[]) {
+  let incomeCents = 0;
+  let expenseCents = 0;
+  for (const g of grouped) {
+    const raw = g._sum.amount;
+    const s = typeof raw === "bigint" ? Number(raw) : Number(raw ?? 0);
+    if (g.type === "INCOME") incomeCents += s;
+    else if (g.type === "EXPENSE") expenseCents += s;
+  }
+  const totalIncome = incomeCents / 100;
+  const totalExpenses = expenseCents / 100;
+  return {
+    totalIncome: Math.round(totalIncome * 100) / 100,
+    totalExpenses: Math.round(totalExpenses * 100) / 100,
+    net: Math.round((totalIncome - totalExpenses) * 100) / 100,
+  };
+}
+
+async function loadTransactionsPageAndTotals(
+  where: Prisma.TransactionWhereInput,
+  page: number,
+  limit: number
+) {
+  return Promise.all([
+    prisma.transaction.findMany({
+      where,
+      select: listSelect,
+      orderBy: { date: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.transaction.count({ where }),
+    prisma.transaction.groupBy({
+      by: ["type"],
+      where,
+      _sum: { amount: true },
+    }),
+  ]);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -50,26 +101,10 @@ export async function GET(request: NextRequest) {
 
     let transactions: TransactionListRow[] = [];
     let total: number;
+    let grouped: { type: string; _sum: { amount: bigint | number | null } }[];
+
     try {
-      [transactions, total] = await Promise.all([
-        prisma.transaction.findMany({
-          where: whereWithSoftDelete,
-          select: {
-            id: true,
-            amount: true,
-            type: true,
-            description: true,
-            date: true,
-            createdAt: true,
-            category: { select: { id: true, name: true, color: true } },
-            account: { select: { id: true, name: true } },
-          },
-          orderBy: { date: "desc" },
-          skip: (page - 1) * limit,
-          take: limit,
-        }),
-        prisma.transaction.count({ where: whereWithSoftDelete }),
-      ]);
+      [transactions, total, grouped] = await loadTransactionsPageAndTotals(whereWithSoftDelete, page, limit);
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       const missingSoftDeleteSupport =
@@ -77,26 +112,7 @@ export async function GET(request: NextRequest) {
         message.includes("no such column: main.Transaction.isDeleted");
       if (!missingSoftDeleteSupport) throw error;
 
-      // Fallback temporal para clientes Prisma desactualizados en runtime.
-      [transactions, total] = await Promise.all([
-        prisma.transaction.findMany({
-          where: baseWhere,
-          select: {
-            id: true,
-            amount: true,
-            type: true,
-            description: true,
-            date: true,
-            createdAt: true,
-            category: { select: { id: true, name: true, color: true } },
-            account: { select: { id: true, name: true } },
-          },
-          orderBy: { date: "desc" },
-          skip: (page - 1) * limit,
-          take: limit,
-        }),
-        prisma.transaction.count({ where: baseWhere }),
-      ]);
+      [transactions, total, grouped] = await loadTransactionsPageAndTotals(baseWhere, page, limit);
     }
 
     const data = transactions.map((t) => ({
@@ -104,7 +120,9 @@ export async function GET(request: NextRequest) {
       amount: centsToAmount(t.amount),
     }));
 
-    return NextResponse.json({ data, total, page, limit });
+    const totals = totalsFromGroupBy(grouped);
+
+    return NextResponse.json({ data, total, page, limit, totals });
   } catch (error) {
     console.error("GET /api/transactions error:", error);
     return NextResponse.json({ error: "Error al cargar transacciones" }, { status: 500 });

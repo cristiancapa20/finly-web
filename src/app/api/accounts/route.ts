@@ -3,19 +3,54 @@ import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+function missingSoftDeleteColumn(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  return (
+    message.includes("Unknown argument `isDeleted`") ||
+    message.includes("no such column: main.Transaction.isDeleted")
+  );
+}
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const accounts = await prisma.account.findMany({
-      where: { userId: session.user.id },
-      select: {
-        id: true, name: true, type: true, color: true, initialBalance: true,
-        transactions: { select: { amount: true, type: true } },
+    const userId = session.user.id;
+    const select = {
+      id: true,
+      name: true,
+      type: true,
+      color: true,
+      initialBalance: true,
+      transactions: {
+        where: { isDeleted: false },
+        select: { amount: true, type: true },
       },
-      orderBy: { name: "asc" },
-    });
+    } as const;
+
+    let accounts;
+    try {
+      accounts = await prisma.account.findMany({
+        where: { userId },
+        select,
+        orderBy: { name: "asc" },
+      });
+    } catch (error) {
+      if (!missingSoftDeleteColumn(error)) throw error;
+      accounts = await prisma.account.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          color: true,
+          initialBalance: true,
+          transactions: { select: { amount: true, type: true } },
+        },
+        orderBy: { name: "asc" },
+      });
+    }
 
     const data = accounts.map(({ transactions, initialBalance, ...acc }) => {
       const txBalance = transactions.reduce((sum, t) =>

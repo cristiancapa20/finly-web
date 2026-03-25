@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Wallet, TrendingUp, TrendingDown } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import {
@@ -135,7 +135,11 @@ export default function DashboardClient() {
       if (res.ok) {
         const data = await res.json();
         setMonthStats(data);
+      } else {
+        setMonthStats(null);
       }
+    } catch {
+      setMonthStats(null);
     } finally {
       setLoadingStats(false);
     }
@@ -180,6 +184,14 @@ export default function DashboardClient() {
       monthStats.balance !== 0);
 
   const hasMonthlyData = monthlyData.some((d) => d.income > 0 || d.expenses > 0);
+
+  /** Saldo real según cuentas (GET /api/accounts), coherente con los chips de cuenta */
+  const saldoEnCuentas = useMemo(() => {
+    if (selectedAccountId) {
+      return accounts.find((a) => a.id === selectedAccountId)?.balance ?? 0;
+    }
+    return accounts.reduce((sum, a) => sum + a.balance, 0);
+  }, [accounts, selectedAccountId]);
 
   return (
     <div className="space-y-6">
@@ -227,38 +239,57 @@ export default function DashboardClient() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <Wallet className={`w-5 h-5 ${(monthStats?.balance ?? 0) >= 0 ? "text-indigo-600" : "text-red-600"}`} />
-              <p className="text-sm text-gray-500">Balance del mes</p>
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white rounded-lg shadow p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <Wallet
+                  className={`w-5 h-5 ${saldoEnCuentas >= 0 ? "text-indigo-600" : "text-red-600"}`}
+                />
+                <p className="text-sm text-gray-500">
+                  {selectedAccountId ? "Saldo de la cuenta" : "Saldo en cuentas"}
+                </p>
+              </div>
+              <p
+                className={`text-2xl font-bold ${
+                  saldoEnCuentas >= 0 ? "text-indigo-600" : "text-red-600"
+                }`}
+              >
+                {formatCurrency(saldoEnCuentas)}
+              </p>
             </div>
-            <p
-              className={`text-2xl font-bold ${
-                (monthStats?.balance ?? 0) >= 0 ? "text-indigo-600" : "text-red-600"
-              }`}
-            >
-              {formatCurrency(monthStats?.balance ?? 0)}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-              <p className="text-sm text-gray-500">Total Ingresos</p>
+            <div className="bg-white rounded-lg shadow p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-5 h-5 text-green-600" />
+                <p className="text-sm text-gray-500">Ingresos del mes</p>
+              </div>
+              <p className="text-2xl font-bold text-green-600">
+                {formatCurrency(monthStats?.totalIncome ?? 0)}
+              </p>
             </div>
-            <p className="text-2xl font-bold text-green-600">
-              {formatCurrency(monthStats?.totalIncome ?? 0)}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingDown className="w-5 h-5 text-red-600" />
-              <p className="text-sm text-gray-500">Total Gastos</p>
+            <div className="bg-white rounded-lg shadow p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingDown className="w-5 h-5 text-red-600" />
+                <p className="text-sm text-gray-500">Gastos del mes</p>
+              </div>
+              <p className="text-2xl font-bold text-red-600">
+                {formatCurrency(monthStats?.totalExpenses ?? 0)}
+              </p>
             </div>
-            <p className="text-2xl font-bold text-red-600">
-              {formatCurrency(monthStats?.totalExpenses ?? 0)}
-            </p>
           </div>
+          {!loadingStats && monthStats && (
+            <p className="text-sm text-gray-600 px-1">
+              <span className="font-medium text-gray-700">Flujo neto del mes:</span>{" "}
+              <span className={monthStats.balance >= 0 ? "text-indigo-600 font-semibold" : "text-red-600 font-semibold"}>
+                {formatCurrency(monthStats.balance)}
+              </span>
+              <span className="text-gray-400"> · </span>
+              <span className="text-gray-500 capitalize">{formatMonthLabel(selectedMonth)}</span>
+              {selectedAccountId && (
+                <span className="text-gray-400"> (cuenta filtrada)</span>
+              )}
+            </p>
+          )}
         </div>
       )}
 
