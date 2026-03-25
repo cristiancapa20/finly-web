@@ -12,6 +12,7 @@ interface Category {
 interface Account {
   id: string;
   name: string;
+  balance: number;
 }
 
 interface FormState {
@@ -41,6 +42,13 @@ export default function TransactionForm() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountsLoaded, setAccountsLoaded] = useState(false);
 
+  const selectedAccount = accounts.find((a) => a.id === form.accountId);
+  const insufficientFunds =
+    form.type === "EXPENSE" &&
+    !!form.amount &&
+    !!selectedAccount &&
+    parseFloat(form.amount) > selectedAccount.balance;
+
   useEffect(() => {
     Promise.all([
       fetch("/api/categories").then((r) => r.json()),
@@ -53,6 +61,11 @@ export default function TransactionForm() {
   }, []);
 
   async function handleSave() {
+    if (insufficientFunds) {
+      toast.error({ title: "Saldo insuficiente", description: `Tu saldo en ${selectedAccount?.name} es insuficiente para este gasto.` });
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -188,18 +201,28 @@ export default function TransactionForm() {
                 </span>
               </div>
             ) : (
-              <select
-                value={form.accountId}
-                onChange={(e) => updateField("accountId", e.target.value)}
-                className={inputBase}
-              >
-                <option value="">Seleccionar...</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-1">
+                <select
+                  value={form.accountId}
+                  onChange={(e) => updateField("accountId", e.target.value)}
+                  className={`${inputBase} ${insufficientFunds ? "border-red-400 focus:border-red-500 focus:ring-red-200" : ""}`}
+                >
+                  <option value="">Seleccionar...</option>
+                  {accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name} — {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(a.balance)}
+                    </option>
+                  ))}
+                </select>
+                {insufficientFunds && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                    Saldo insuficiente. Disponible: {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(selectedAccount?.balance ?? 0)}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
@@ -240,7 +263,8 @@ export default function TransactionForm() {
               !form.type ||
               !form.categoryId ||
               !form.accountId ||
-              !form.date
+              !form.date ||
+              insufficientFunds
             }
             className="w-full sm:w-auto px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >

@@ -66,6 +66,31 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Validar saldo suficiente si es un gasto
+  if (type === "EXPENSE") {
+    const account = await prisma.account.findUnique({
+      where: { id: accountId, userId: session.user.id },
+      include: { transactions: { select: { amount: true, type: true } } },
+    });
+
+    if (!account) {
+      return NextResponse.json({ error: "Cuenta no encontrada" }, { status: 404 });
+    }
+
+    const txBalance = account.transactions.reduce(
+      (sum, t) => (t.type === "INCOME" ? sum + t.amount : sum - t.amount),
+      0
+    );
+    const currentBalance = account.initialBalance + txBalance / 100;
+
+    if (amount > currentBalance) {
+      return NextResponse.json(
+        { error: `Saldo insuficiente. Tu saldo actual es ${new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(currentBalance)}.` },
+        { status: 422 }
+      );
+    }
+  }
+
   const transaction = await prisma.transaction.create({
     data: {
       amount: amountInputToCents(amount),
