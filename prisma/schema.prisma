@@ -86,6 +86,8 @@ model Transaction {
   userId      String
   description String?
   date        DateTime
+  isDeleted   Boolean  @default(false)
+  deletedAt   DateTime?
   createdAt   DateTime @default(now())
   category    Category @relation(fields: [categoryId], references: [id])
   account     Account  @relation(fields: [accountId], references: [id])

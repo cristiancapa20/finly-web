@@ -15,7 +15,9 @@ export async function PATCH(
 
   const { id } = params;
 
-  const existing = await prisma.transaction.findUnique({ where: { id, userId: session.user.id } });
+  const existing = await prisma.transaction.findUnique({
+    where: { id, userId: session.user.id, isDeleted: false },
+  });
   if (!existing) {
     return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
   }
@@ -59,12 +61,17 @@ export async function DELETE(
 
   const { id } = params;
 
-  const existing = await prisma.transaction.findUnique({ where: { id, userId: session.user.id } });
+  const existing = await prisma.transaction.findUnique({
+    where: { id, userId: session.user.id, isDeleted: false },
+  });
   if (!existing) {
     return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
   }
 
-  await prisma.transaction.delete({ where: { id } });
+  await prisma.transaction.update({
+    where: { id },
+    data: { isDeleted: true, deletedAt: new Date() },
+  });
 
   return NextResponse.json({ data: { id } });
 }

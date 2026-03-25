@@ -24,17 +24,19 @@ export async function DELETE(
     });
     if (!payment) return NextResponse.json({ error: "Pago no encontrado" }, { status: 404 });
 
-    await db.loanPayment.delete({ where: { id: params.paymentId } });
+    await db.$transaction(async (tx: any) => {
+      await tx.loanPayment.delete({ where: { id: params.paymentId } });
 
-    // Re-check si el préstamo debe volver a ACTIVE
-    const agg = await db.loanPayment.aggregate({
-      where: { loanId: params.id },
-      _sum: { amount: true },
+      // Re-check si el préstamo debe volver a ACTIVE
+      const agg = await tx.loanPayment.aggregate({
+        where: { loanId: params.id },
+        _sum: { amount: true },
+      });
+      const totalPaid: number = agg._sum.amount ?? 0;
+      if (totalPaid < loan.amount && loan.status === "PAID") {
+        await tx.loan.update({ where: { id: params.id }, data: { status: "ACTIVE", updatedAt: new Date() } });
+      }
     });
-    const totalPaid: number = agg._sum.amount ?? 0;
-    if (totalPaid < loan.amount && loan.status === "PAID") {
-      await db.loan.update({ where: { id: params.id }, data: { status: "ACTIVE", updatedAt: new Date() } });
-    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

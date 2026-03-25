@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { amountInputToCents, centsToAmount } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
+import { createLoanPaymentBalanceTransaction } from "@/lib/loanBalance";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = prisma as any;
@@ -39,21 +40,36 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const amountInCents = amountInputToCents(amountNum);
     const paymentDate = new Date(date);
 
-    const payment = await db.loanPayment.create({
-      data: {
-        loanId: params.id,
+    const payment = await db.$transaction(async (tx: any) => {
+      const balanceTx = await createLoanPaymentBalanceTransaction({
+        userId: session.user.id,
         accountId,
-        amount: amountInCents,
+        type: loan.type,
+        contactName: loan.contactName,
+        amountInCents,
         date: paymentDate,
-        note: note?.trim() || null,
-      },
-    });
+        db: tx,
+      });
 
-    // Auto-mark as PAID if fully covered
-    const totalPaid = loan.payments.reduce((s: number, p: { amount: number }) => s + p.amount, 0) + amountInCents;
-    if (totalPaid >= loan.amount) {
-      await db.loan.update({ where: { id: params.id }, data: { status: "PAID", updatedAt: new Date() } });
-    }
+      const createdPayment = await tx.loanPayment.create({
+        data: {
+          loanId: params.id,
+          accountId,
+          balanceTransactionId: balanceTx.id,
+          amount: amountInCents,
+          date: paymentDate,
+          note: note?.trim() || null,
+        },
+      });
+
+      // Auto-mark as PAID if fully covered
+      const totalPaid = loan.payments.reduce((s: number, p: { amount: number }) => s + p.amount, 0) + amountInCents;
+      if (totalPaid >= loan.amount) {
+        await tx.loan.update({ where: { id: params.id }, data: { status: "PAID", updatedAt: new Date() } });
+      }
+
+      return createdPayment;
+    });
 
     return NextResponse.json({ data: { ...payment, amount: centsToAmount(payment.amount), account } }, { status: 201 });
   } catch (error) {

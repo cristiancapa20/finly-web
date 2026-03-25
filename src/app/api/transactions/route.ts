@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const page = parseInt(searchParams.get("page") ?? "1", 10);
   const limit = parseInt(searchParams.get("limit") ?? "20", 10);
 
-  const where: Prisma.TransactionWhereInput = { userId: session.user.id };
+  const where: Prisma.TransactionWhereInput = { userId: session.user.id, isDeleted: false };
   if (type) where.type = type;
   if (categoryId) where.categoryId = categoryId;
   if (accountId) where.accountId = accountId;
