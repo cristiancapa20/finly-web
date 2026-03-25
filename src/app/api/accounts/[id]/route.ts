@@ -12,14 +12,31 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await req.json();
-  const { name, color, initialBalance } = body;
+  const { name, color, balance } = body;
+
+  let newInitialBalance: number | undefined;
+
+  if (balance !== undefined && balance !== "") {
+    // Calcular el txBalance actual para derivar el initialBalance correcto
+    const existing = await prisma.account.findUnique({
+      where: { id, userId: session.user.id },
+      include: { transactions: { select: { amount: true, type: true } } },
+    });
+    if (existing) {
+      const txBalance = existing.transactions.reduce(
+        (sum, t) => (t.type === "INCOME" ? sum + t.amount : sum - t.amount),
+        0
+      ) / 100;
+      newInitialBalance = parseFloat(balance) - txBalance;
+    }
+  }
 
   const account = await prisma.account.update({
     where: { id, userId: session.user.id },
     data: {
       ...(name ? { name } : {}),
       ...(color ? { color } : {}),
-      ...(initialBalance !== undefined && initialBalance !== "" ? { initialBalance: parseFloat(initialBalance) } : {}),
+      ...(newInitialBalance !== undefined ? { initialBalance: newInitialBalance } : {}),
     },
     select: { id: true, name: true, type: true, color: true, initialBalance: true },
   });

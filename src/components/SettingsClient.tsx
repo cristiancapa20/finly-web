@@ -15,6 +15,7 @@ interface Account {
   type: AccountType;
   color?: string;
   balance?: number;
+  initialBalance?: number;
 }
 
 interface Category {
@@ -172,7 +173,7 @@ export default function SettingsClient() {
       const res = await fetch(`/api/accounts/${editingAccount.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName, color: editColor, initialBalance: editBalance }),
+        body: JSON.stringify({ name: editName, color: editColor, balance: editBalance }),
       });
       if (res.ok) {
         setEditingAccount(null);
