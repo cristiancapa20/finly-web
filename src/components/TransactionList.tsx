@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "@/lib/toast";
 import { useSearchParams, usePathname } from "next/navigation";
-import { useTransitionRouter } from "next-view-transitions";
+import { Link, useTransitionRouter } from "next-view-transitions";
 import {
   TrendingUp,
   TrendingDown,
@@ -18,6 +18,7 @@ import {
   ArrowUpDown,
   DollarSign,
   AlignLeft,
+  HandCoins,
 } from "lucide-react";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import { AccountFilterChips, type AccountFilterChipItem } from "@/components/AccountFilterChips";
@@ -35,6 +36,7 @@ interface Transaction {
   date: string;
   category: { id: string; name: string; color: string };
   account: { id: string; name: string };
+  managedViaLoans?: boolean;
 }
 
 interface TransactionsListTotals {
@@ -103,6 +105,19 @@ function TypeBadge({ type }: { type: string }) {
       <Icon className="w-3 h-3" />
       {isIncome ? "Ingreso" : "Gasto"}
     </span>
+  );
+}
+
+function LoansManagedHintLink({ className = "" }: { className?: string }) {
+  return (
+    <Link
+      href="/loans"
+      className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50 hover:text-indigo-800 transition-colors ${className}`}
+      title="Este movimiento viene de un préstamo o pago: cambialo desde Préstamos"
+    >
+      <HandCoins className="w-3.5 h-3.5 flex-shrink-0 text-indigo-600" />
+      Préstamos
+    </Link>
   );
 }
 
@@ -690,21 +705,28 @@ export default function TransactionList() {
                     </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => setEditingTransaction(t)}
-                          className="p-1.5 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                          title="Editar transacción"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <DeleteButton
-                          id={t.id}
-                          confirmId={deleteConfirmId}
-                          isDeleting={isDeleting}
-                          onRequestDelete={(id) => setDeleteConfirmId(id)}
-                          onConfirmDelete={handleConfirmDelete}
-                          onCancelDelete={() => setDeleteConfirmId(null)}
-                        />
+                        {t.managedViaLoans ? (
+                          <LoansManagedHintLink />
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setEditingTransaction(t)}
+                              className="p-1.5 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                              title="Editar transacción"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <DeleteButton
+                              id={t.id}
+                              confirmId={deleteConfirmId}
+                              isDeleting={isDeleting}
+                              onRequestDelete={(id) => setDeleteConfirmId(id)}
+                              onConfirmDelete={handleConfirmDelete}
+                              onCancelDelete={() => setDeleteConfirmId(null)}
+                            />
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

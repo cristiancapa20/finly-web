@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { amountInputToCents, centsToAmount } from "@/lib/money";
+import { getLoanManagedTransactionIds } from "@/lib/loanManagedTransaction";
 import { prisma } from "@/lib/prisma";
 
 type TransactionListRow = {
@@ -115,9 +116,15 @@ export async function GET(request: NextRequest) {
       [transactions, total, grouped] = await loadTransactionsPageAndTotals(baseWhere, page, limit);
     }
 
+    const loanManagedIds = await getLoanManagedTransactionIds(
+      session.user.id,
+      transactions.map((t) => t.id)
+    );
+
     const data = transactions.map((t) => ({
       ...t,
       amount: centsToAmount(t.amount),
+      managedViaLoans: loanManagedIds.has(t.id),
     }));
 
     const totals = totalsFromGroupBy(grouped);

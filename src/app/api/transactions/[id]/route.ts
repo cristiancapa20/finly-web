@@ -2,7 +2,11 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { amountInputToCents, centsToAmount } from "@/lib/money";
+import { isLoanManagedTransaction } from "@/lib/loanManagedTransaction";
 import { prisma } from "@/lib/prisma";
+
+const LOAN_MANAGED_MSG =
+  "Esta transacción está vinculada a Préstamos. Editá o eliminá el préstamo o el pago desde la sección Préstamos.";
 
 export async function PATCH(
   request: NextRequest,
@@ -20,6 +24,10 @@ export async function PATCH(
   });
   if (!existing) {
     return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
+  }
+
+  if (await isLoanManagedTransaction(id, session.user.id)) {
+    return NextResponse.json({ error: LOAN_MANAGED_MSG }, { status: 409 });
   }
 
   const body = await request.json();
@@ -66,6 +74,10 @@ export async function DELETE(
   });
   if (!existing) {
     return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
+  }
+
+  if (await isLoanManagedTransaction(id, session.user.id)) {
+    return NextResponse.json({ error: LOAN_MANAGED_MSG }, { status: 409 });
   }
 
   await prisma.transaction.update({

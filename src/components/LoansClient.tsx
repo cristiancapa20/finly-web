@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "@/lib/toast";
-import { Plus, X, Trash2, ChevronDown, ChevronUp, CheckCircle, RotateCcw, CreditCard, HandCoins, Bell, AlertTriangle } from "lucide-react";
+import { Plus, X, Trash2, ChevronDown, ChevronUp, CheckCircle, RotateCcw, CreditCard, HandCoins, Bell, AlertTriangle, Pencil } from "lucide-react";
 
 interface LoanPayment {
   id: string;
@@ -49,6 +49,13 @@ const fmtDate = (s: string | null) => {
 };
 
 const today = () => new Date().toISOString().split("T")[0];
+
+/** Fecha del API (ISO) → valor para input type="date" */
+function dateInputFromApi(iso: string) {
+  if (iso.length >= 10) return iso.slice(0, 10);
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? today() : d.toISOString().split("T")[0];
+}
 
 function dueDateStatus(dueDate: string | null, status: string) {
   if (!dueDate || status === "PAID") return null;
@@ -431,6 +438,132 @@ function AddPaymentModal({ loan, onClose, onAdded }: { loan: Loan; onClose: () =
   );
 }
 
+/* ─── Edit Payment Modal ─── */
+
+function EditPaymentModal({
+  loan,
+  payment,
+  onClose,
+  onLoanRefreshed,
+}: {
+  loan: Loan;
+  payment: LoanPayment;
+  onClose: () => void;
+  onLoanRefreshed: (loan: Loan) => void;
+}) {
+  const [amount, setAmount] = useState(String(payment.amount));
+  const [date, setDate] = useState(dateInputFromApi(payment.date));
+  const [note, setNote] = useState(payment.note ?? "");
+  const [accountId, setAccountId] = useState(payment.account?.id ?? "");
+  const [accounts, setAccounts] = useState<LoanAccount[]>([]);
+  const [accountsLoaded, setAccountsLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/accounts")
+      .then((r) => r.json())
+      .then((data) => {
+        const fetchedAccounts = data.data ?? [];
+        setAccounts(fetchedAccounts);
+        if (!payment.account?.id && fetchedAccounts.length > 0) {
+          setAccountId(fetchedAccounts[0].id);
+        }
+      })
+      .finally(() => setAccountsLoaded(true));
+  }, [payment.account?.id]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!amount || !date || !accountId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/loans/${loan.id}/payments/${payment.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: parseFloat(amount), date, note: note || null, accountId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error({ title: "Error", description: data.error });
+        return;
+      }
+      toast.success({ title: "Pago actualizado" });
+      const listRes = await fetch("/api/loans");
+      const listData = await listRes.json();
+      const updated = listData.data?.find((l: Loan) => l.id === loan.id);
+      if (updated) onLoanRefreshed(updated);
+      onClose();
+    } catch {
+      toast.error({ title: "Error de red" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const inputCls = "w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:border-indigo-500 focus:ring-indigo-200 transition-colors";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">Editar pago</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Restante: {fmt(loan.remaining)}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Monto pagado</label>
+            <input type="number" min="0.01" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className={inputCls} placeholder="0.00" required />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Fecha del pago</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputCls} required />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {loan.type === "LENT" ? "Cuenta donde recibiste el pago" : "Cuenta desde la que pagaste"}
+            </label>
+            <select
+              value={accountId}
+              onChange={e => setAccountId(e.target.value)}
+              className={inputCls}
+              required
+              disabled={!accountsLoaded || accounts.length === 0}
+            >
+              <option value="">{accountsLoaded ? "Selecciona una cuenta" : "Cargando cuentas..."}</option>
+              {accounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name} — {fmtAccountBalance(account.balance ?? 0)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Nota <span className="text-gray-400">(opcional)</span></label>
+            <input type="text" value={note} onChange={e => setNote(e.target.value)} className={inputCls} placeholder="Ej: Transferencia, efectivo..." />
+          </div>
+          <div className="flex gap-3 pt-1">
+            <button type="submit" disabled={loading || !amount || !date || !accountId || accounts.length === 0} className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              {loading ? "Guardando..." : "Guardar cambios"}
+            </button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Loan Card ─── */
 function LoanCard({
   loan, onDelete, onPaymentAdded, onStatusToggled,
@@ -446,6 +579,7 @@ function LoanCard({
   const [toggling, setToggling] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
+  const [editingPayment, setEditingPayment] = useState<LoanPayment | null>(null);
 
   const due = dueDateStatus(loan.dueDate, loan.status);
   const isLent = loan.type === "LENT";
@@ -580,7 +714,7 @@ function LoanCard({
                 onClick={() => setShowAddPayment(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 text-indigo-600" />
                 {isLent ? "Me pagaron" : "Registrar pago"}
               </button>
             )}
@@ -589,7 +723,7 @@ function LoanCard({
               disabled={toggling}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 ${loan.status === "PAID" ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200" : "bg-green-50 text-green-700 hover:bg-green-100 border-green-200"}`}
             >
-              {loan.status === "PAID" ? <RotateCcw className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5" />}
+              {loan.status === "PAID" ? <RotateCcw className="w-3.5 h-3.5 text-amber-600" /> : <CheckCircle className="w-3.5 h-3.5 text-green-600" />}
               {loan.status === "PAID" ? "Reactivar" : "Marcar pagado"}
             </button>
             {loan.payments.length > 0 && (
@@ -597,7 +731,7 @@ function LoanCard({
                 onClick={() => setShowPayments(v => !v)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors"
               >
-                {showPayments ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                {showPayments ? <ChevronUp className="w-3.5 h-3.5 text-gray-500" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-500" />}
                 {loan.payments.length} pago{loan.payments.length !== 1 ? "s" : ""}
               </button>
             )}
@@ -622,7 +756,7 @@ function LoanCard({
                 onClick={() => setConfirmingDelete(true)}
                 className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="w-3.5 h-3.5 text-red-600" />
                 Eliminar
               </button>
             )}
@@ -633,20 +767,32 @@ function LoanCard({
             <div className="border-t border-gray-100 pt-3 space-y-2">
               <p className="text-xs font-medium text-gray-600">Historial de pagos</p>
               {loan.payments.map((p) => (
-                <div key={p.id} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
-                  <div>
+                <div key={p.id} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2 gap-2">
+                  <div className="min-w-0 flex-1">
                     <span className="font-medium text-gray-900">{fmt(p.amount)}</span>
                     {p.note && <span className="text-gray-500 ml-1.5 text-xs">· {p.note}</span>}
                     <p className="text-xs text-gray-400">{fmtDate(p.date)}</p>
                     {p.account && <p className="text-xs text-gray-400">Cuenta: {p.account.name}</p>}
                   </div>
-                  <button
-                    onClick={() => deletePayment(p.id)}
-                    disabled={deletingPaymentId === p.id}
-                    className="p-1 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-0.5 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setEditingPayment(p)}
+                      className="p-1.5 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                      title="Editar pago"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deletePayment(p.id)}
+                      disabled={deletingPaymentId === p.id}
+                      className="p-1.5 rounded-md text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                      title="Eliminar pago"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -662,6 +808,14 @@ function LoanCard({
             onPaymentAdded(loan.id, payment);
             setShowPayments(true);
           }}
+        />
+      )}
+      {editingPayment && (
+        <EditPaymentModal
+          loan={loan}
+          payment={editingPayment}
+          onClose={() => setEditingPayment(null)}
+          onLoanRefreshed={onStatusToggled}
         />
       )}
     </>
@@ -753,6 +907,11 @@ export default function LoansClient() {
               }}
               className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-md transition-all ${tab === val ? (val === "OWED" ? "bg-red-100 shadow-sm text-red-700" : "bg-green-100 shadow-sm text-green-700") : "text-gray-500 hover:text-gray-700"}`}
             >
+              {val === "LENT" ? (
+                <HandCoins className={`w-4 h-4 ${tab === val ? "text-green-600" : "text-gray-400"}`} />
+              ) : (
+                <CreditCard className={`w-4 h-4 ${tab === val ? "text-red-600" : "text-gray-400"}`} />
+              )}
               {label}
               {count > 0 && (
                 <span className={`text-xs rounded-full px-1.5 py-0.5 font-semibold ${tab === val ? (val === "OWED" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600") : "bg-gray-200 text-gray-500"}`}>
@@ -766,7 +925,7 @@ export default function LoansClient() {
           onClick={() => setShowNewModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 text-white" />
           <span className="hidden sm:inline">Nuevo registro</span>
           <span className="sm:hidden">Nuevo</span>
         </button>
@@ -863,7 +1022,7 @@ export default function LoansClient() {
         return noLoansInTab ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 ${tab === "OWED" ? "bg-red-50" : "bg-green-50"}`}>
-              {tab === "OWED" ? <CreditCard className="w-7 h-7 text-red-400" /> : <HandCoins className="w-7 h-7 text-green-400" />}
+              {tab === "OWED" ? <CreditCard className="w-7 h-7 text-red-600" /> : <HandCoins className="w-7 h-7 text-green-600" />}
             </div>
             <p className="text-gray-500 font-medium">
               {tab === "LENT" ? "No tienes préstamos registrados" : "No tienes deudas registradas"}
@@ -879,7 +1038,7 @@ export default function LoansClient() {
           <div className="flex flex-col items-center py-12 text-center px-4">
             {statusTab === "pending" ? (
               <>
-                <CheckCircle className="w-10 h-10 text-green-400 mb-3" />
+                <CheckCircle className="w-10 h-10 text-green-600 mb-3" />
                 <p className="text-sm text-gray-600 font-medium">
                   {tab === "LENT" ? "No hay préstamos pendientes" : "No hay deudas pendientes"}
                 </p>
