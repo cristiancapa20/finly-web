@@ -17,6 +17,8 @@ interface LoanPayment {
 interface LoanAccount {
   id: string;
   name: string;
+  /** Presente en GET /api/accounts; las cuentas anidadas en préstamos pueden no incluirlo */
+  balance?: number;
 }
 
 interface Loan {
@@ -36,6 +38,10 @@ interface Loan {
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
+
+/** Saldo de cuenta (mismo criterio que TransactionForm: MXN) */
+const fmtAccountBalance = (n: number) =>
+  new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(n);
 
 const fmtDate = (s: string | null) => {
   if (!s) return null;
@@ -225,7 +231,9 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
             >
               <option value="">{accountsLoaded ? "Selecciona una cuenta" : "Cargando cuentas..."}</option>
               {accounts.map((account) => (
-                <option key={account.id} value={account.id}>{account.name}</option>
+                <option key={account.id} value={account.id}>
+                  {account.name} — {fmtAccountBalance(account.balance ?? 0)}
+                </option>
               ))}
             </select>
             {accountsLoaded && accounts.length === 0 && (
@@ -399,7 +407,9 @@ function AddPaymentModal({ loan, onClose, onAdded }: { loan: Loan; onClose: () =
             >
               <option value="">{accountsLoaded ? "Selecciona una cuenta" : "Cargando cuentas..."}</option>
               {accounts.map((account) => (
-                <option key={account.id} value={account.id}>{account.name}</option>
+                <option key={account.id} value={account.id}>
+                  {account.name} — {fmtAccountBalance(account.balance ?? 0)}
+                </option>
               ))}
             </select>
           </div>

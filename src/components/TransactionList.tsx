@@ -20,13 +20,9 @@ import {
   AlignLeft,
 } from "lucide-react";
 import { getCategoryIcon } from "@/lib/categoryIcons";
+import { AccountFilterChips, type AccountFilterChipItem } from "@/components/AccountFilterChips";
 
 interface Category {
-  id: string;
-  name: string;
-}
-
-interface Account {
   id: string;
   name: string;
 }
@@ -167,7 +163,7 @@ function DeleteButton({
 interface EditModalProps {
   transaction: Transaction;
   categories: Category[];
-  accounts: Account[];
+  accounts: AccountFilterChipItem[];
   onClose: () => void;
   onSaved: () => void | Promise<void>;
 }
@@ -288,7 +284,7 @@ export default function TransactionList() {
   const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accounts, setAccounts] = useState<AccountFilterChipItem[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -423,39 +419,25 @@ export default function TransactionList() {
 
   const totalPages = Math.ceil(total / LIMIT);
 
+  const formatAccountBalance = (amount: number) =>
+    new Intl.NumberFormat("es-MX", {
+      style: "currency",
+      currency: "MXN",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+
   const inputBase =
     "rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:border-indigo-500 focus:ring-indigo-200";
 
   return (
     <div className="space-y-4">
-      {/* Account Switcher */}
-      {accounts.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => updateParams({ accountId: "" })}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-              accountIdParam === ""
-                ? "bg-indigo-600 text-white border-indigo-600"
-                : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"
-            }`}
-          >
-            Todas
-          </button>
-          {accounts.map((account) => (
-            <button
-              key={account.id}
-              onClick={() => updateParams({ accountId: account.id })}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-                accountIdParam === account.id
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"
-              }`}
-            >
-              {account.name}
-            </button>
-          ))}
-        </div>
-      )}
+      <AccountFilterChips
+        accounts={accounts}
+        selectedAccountId={accountIdParam}
+        onSelectAccountId={(id) => updateParams({ accountId: id })}
+        formatBalance={formatAccountBalance}
+      />
 
       {/* Filters */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">

@@ -15,6 +15,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
+import { AccountFilterChips, type AccountFilterChipItem } from "@/components/AccountFilterChips";
 interface ChartLegendProps {
   payload?: { value: string; color: string }[];
 }
@@ -108,15 +109,10 @@ function addMonths(yyyyMm: string, delta: number) {
   return getMonthString(d);
 }
 
-interface Account {
-  id: string;
-  name: string;
-}
-
 export default function DashboardClient() {
   const [selectedMonth, setSelectedMonth] = useState(getMonthString(new Date()));
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accounts, setAccounts] = useState<AccountFilterChipItem[]>([]);
   const [monthStats, setMonthStats] = useState<MonthStats | null>(null);
   const [monthlyData, setMonthlyData] = useState<MonthlyDataPoint[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -125,7 +121,7 @@ export default function DashboardClient() {
   useEffect(() => {
     fetch("/api/accounts")
       .then((r) => r.json())
-      .then((data: { data?: Account[] }) => {
+      .then((data: { data?: AccountFilterChipItem[] }) => {
         if (data.data) setAccounts(data.data);
       });
   }, []);
@@ -187,46 +183,12 @@ export default function DashboardClient() {
 
   return (
     <div className="space-y-6">
-      {/* Account Switcher */}
-      {accounts.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => {
-              if (document.startViewTransition) {
-                document.startViewTransition(() => setSelectedAccountId(""));
-              } else {
-                setSelectedAccountId("");
-              }
-            }}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-              selectedAccountId === ""
-                ? "bg-indigo-600 text-white border-indigo-600"
-                : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"
-            }`}
-          >
-            Todas
-          </button>
-          {accounts.map((account) => (
-            <button
-              key={account.id}
-              onClick={() => {
-                if (document.startViewTransition) {
-                  document.startViewTransition(() => setSelectedAccountId(account.id));
-                } else {
-                  setSelectedAccountId(account.id);
-                }
-              }}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-                selectedAccountId === account.id
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-gray-600 border-gray-300 hover:border-indigo-400 hover:text-indigo-600"
-              }`}
-            >
-              {account.name}
-            </button>
-          ))}
-        </div>
-      )}
+      <AccountFilterChips
+        accounts={accounts}
+        selectedAccountId={selectedAccountId}
+        onSelectAccountId={setSelectedAccountId}
+        formatBalance={formatCurrency}
+      />
 
       {/* Month Selector */}
       <div className="flex items-center gap-4">
