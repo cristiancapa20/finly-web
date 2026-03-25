@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useCurrency } from "@/context/CurrencyContext";
 import { Wallet, TrendingUp, TrendingDown } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import {
@@ -42,6 +43,7 @@ interface ChartTooltipProps {
 }
 
 function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
+  const { formatCurrency } = useCurrency();
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-md px-4 py-3 text-sm">
@@ -86,14 +88,6 @@ interface MonthlyDataPoint {
   expenses: number;
 }
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    minimumFractionDigits: 2,
-  }).format(amount);
-}
-
 function formatMonthLabel(yyyyMm: string) {
   const [year, month] = yyyyMm.split("-").map(Number);
   const date = new Date(year, month - 1, 1);
@@ -111,6 +105,7 @@ function addMonths(yyyyMm: string, delta: number) {
 }
 
 export default function DashboardClient() {
+  const { formatCurrency } = useCurrency();
   const [selectedMonth, setSelectedMonth] = useState(getMonthString(new Date()));
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
 

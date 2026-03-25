@@ -16,9 +16,9 @@ function applyWithViewTransition(update: () => void) {
 }
 
 const defaultFormatBalance = (amount: number) =>
-  new Intl.NumberFormat("es-MX", {
+  new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "MXN",
+    currency: "USD",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);

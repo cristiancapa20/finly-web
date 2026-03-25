@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCurrency } from "@/context/CurrencyContext";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "@/lib/toast";
 import { Plus, X, Trash2, ChevronDown, ChevronUp, CheckCircle, RotateCcw, CreditCard, HandCoins, Bell, AlertTriangle, Pencil } from "lucide-react";
@@ -37,12 +38,6 @@ interface Loan {
   account: LoanAccount | null;
 }
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
-
-/** Saldo de cuenta (mismo criterio que TransactionForm: MXN) */
-const fmtAccountBalance = (n: number) =>
-  new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(n);
 
 const fmtDate = (s: string | null) => {
   if (!s) return null;
@@ -68,13 +63,13 @@ function dueDateStatus(dueDate: string | null, status: string) {
   return { label: `Vence ${fmtDate(dueDate)}`, cls: "text-gray-500 bg-gray-50 border-gray-200" };
 }
 
-function ProgressBar({ total, remaining }: { total: number; remaining: number }) {
+function ProgressBar({ total, remaining, formatCurrency }: { total: number; remaining: number; formatCurrency: (n: number) => string }) {
   const pct = total > 0 ? Math.round(((total - remaining) / total) * 100) : 0;
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-xs text-gray-500">
         <span>Pagado {pct}%</span>
-        <span>Restante {fmt(remaining)}</span>
+        <span>Restante {formatCurrency(remaining)}</span>
       </div>
       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
         <div
@@ -89,6 +84,7 @@ function ProgressBar({ total, remaining }: { total: number; remaining: number })
 
 /* ─── New Loan Modal ─── */
 function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: (loan: Loan) => void }) {
+  const { formatCurrency } = useCurrency();
   const [form, setForm] = useState({ type: "LENT", contactName: "", amount: "", dueDate: "", description: "", reminderDays: "", accountId: "" });
   const [accounts, setAccounts] = useState<LoanAccount[]>([]);
   const [accountsLoaded, setAccountsLoaded] = useState(false);
@@ -240,7 +236,7 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
               <option value="">{accountsLoaded ? "Selecciona una cuenta" : "Cargando cuentas..."}</option>
               {accounts.map((account) => (
                 <option key={account.id} value={account.id}>
-                  {account.name} — {fmtAccountBalance(account.balance ?? 0)}
+                  {account.name} — {formatCurrency(account.balance ?? 0)}
                 </option>
               ))}
             </select>
@@ -337,6 +333,7 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
 /* ─── Add Payment Modal ─── */
 
 function AddPaymentModal({ loan, onClose, onAdded }: { loan: Loan; onClose: () => void; onAdded: (payment: LoanPayment) => void }) {
+  const { formatCurrency } = useCurrency();
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(today());
   const [note, setNote] = useState("");
@@ -387,7 +384,7 @@ function AddPaymentModal({ loan, onClose, onAdded }: { loan: Loan; onClose: () =
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
             <h2 className="text-base font-semibold text-gray-900">Registrar pago</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Restante: {fmt(loan.remaining)}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Restante: {formatCurrency(loan.remaining)}</p>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
             <X className="w-5 h-5" />
@@ -416,7 +413,7 @@ function AddPaymentModal({ loan, onClose, onAdded }: { loan: Loan; onClose: () =
               <option value="">{accountsLoaded ? "Selecciona una cuenta" : "Cargando cuentas..."}</option>
               {accounts.map((account) => (
                 <option key={account.id} value={account.id}>
-                  {account.name} — {fmtAccountBalance(account.balance ?? 0)}
+                  {account.name} — {formatCurrency(account.balance ?? 0)}
                 </option>
               ))}
             </select>
@@ -452,6 +449,7 @@ function EditPaymentModal({
   onClose: () => void;
   onLoanRefreshed: (loan: Loan) => void;
 }) {
+  const { formatCurrency } = useCurrency();
   const [amount, setAmount] = useState(String(payment.amount));
   const [date, setDate] = useState(dateInputFromApi(payment.date));
   const [note, setNote] = useState(payment.note ?? "");
@@ -513,7 +511,7 @@ function EditPaymentModal({
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
             <h2 className="text-base font-semibold text-gray-900">Editar pago</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Restante: {fmt(loan.remaining)}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Restante: {formatCurrency(loan.remaining)}</p>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
             <X className="w-5 h-5" />
@@ -542,7 +540,7 @@ function EditPaymentModal({
               <option value="">{accountsLoaded ? "Selecciona una cuenta" : "Cargando cuentas..."}</option>
               {accounts.map((account) => (
                 <option key={account.id} value={account.id}>
-                  {account.name} — {fmtAccountBalance(account.balance ?? 0)}
+                  {account.name} — {formatCurrency(account.balance ?? 0)}
                 </option>
               ))}
             </select>
@@ -574,6 +572,7 @@ function LoanCard({
   onPaymentAdded: (loanId: string, payment: LoanPayment) => void;
   onStatusToggled: (updated: Loan) => void;
 }) {
+  const { formatCurrency } = useCurrency();
   const [showPayments, setShowPayments] = useState(false);
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -682,13 +681,13 @@ function LoanCard({
               )}
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="text-lg font-bold text-gray-900">{fmt(loan.amount)}</p>
+              <p className="text-lg font-bold text-gray-900">{formatCurrency(loan.amount)}</p>
               <p className="text-xs text-gray-500">total</p>
             </div>
           </div>
 
           {/* Progress */}
-          {loan.status !== "PAID" && <ProgressBar total={loan.amount} remaining={loan.remaining} />}
+          {loan.status !== "PAID" && <ProgressBar total={loan.amount} remaining={loan.remaining} formatCurrency={formatCurrency} />}
 
           {/* Due date + createdAt */}
           <div className="flex items-center gap-2 flex-wrap text-xs">
@@ -770,7 +769,7 @@ function LoanCard({
               {loan.payments.map((p) => (
                 <div key={p.id} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2 gap-2">
                   <div className="min-w-0 flex-1">
-                    <span className="font-medium text-gray-900">{fmt(p.amount)}</span>
+                    <span className="font-medium text-gray-900">{formatCurrency(p.amount)}</span>
                     {p.note && <span className="text-gray-500 ml-1.5 text-xs">· {p.note}</span>}
                     <p className="text-xs text-gray-400">{fmtDate(p.date)}</p>
                     {p.account && <p className="text-xs text-gray-400">Cuenta: {p.account.name}</p>}
@@ -825,6 +824,7 @@ function LoanCard({
 
 /* ─── Main Component ─── */
 export default function LoansClient() {
+  const { formatCurrency } = useCurrency();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"OWED" | "LENT">("LENT");
   /** Ver solo pendientes o solo ya pagadas dentro del tab Préstamos/Deudas */
@@ -887,7 +887,7 @@ export default function LoansClient() {
             <HandCoins className="w-4 h-4 text-green-600" />
             <p className="text-xs font-semibold text-green-700">Préstamos</p>
           </div>
-          <p className="text-xl font-bold text-green-600">{fmt(totalLent)}</p>
+          <p className="text-xl font-bold text-green-600">{formatCurrency(totalLent)}</p>
           <p className="text-xs text-gray-500 mt-0.5">Dinero que presté</p>
           <p className="text-xs text-gray-400 mt-0.5">{lent.filter(l => l.status === "ACTIVE").length} activo{lent.filter(l => l.status === "ACTIVE").length !== 1 ? "s" : ""}</p>
         </div>
@@ -896,7 +896,7 @@ export default function LoansClient() {
             <CreditCard className="w-4 h-4 text-red-500" />
             <p className="text-xs font-semibold text-red-700">Deudas</p>
           </div>
-          <p className="text-xl font-bold text-red-600">{fmt(totalOwed)}</p>
+          <p className="text-xl font-bold text-red-600">{formatCurrency(totalOwed)}</p>
           <p className="text-xs text-gray-500 mt-0.5">Dinero que debo</p>
           <p className="text-xs text-gray-400 mt-0.5">{owned.filter(l => l.status === "ACTIVE").length} activa{owned.filter(l => l.status === "ACTIVE").length !== 1 ? "s" : ""}</p>
         </div>

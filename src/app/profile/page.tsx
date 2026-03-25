@@ -8,23 +8,35 @@ import { useRouter } from "next/navigation";
 import { Camera, User, LogOut } from "lucide-react";
 import Image from "next/image";
 import { toast } from "@/lib/toast";
+import { CURRENCIES } from "@/lib/currency";
+import { useCurrency } from "@/context/CurrencyContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Profile {
   id: string;
   email: string;
   displayName: string | null;
   avatar: string | null;
+  currency: string;
   createdAt: string;
 }
 
 export default function ProfilePage() {
   const { data: session, update } = useSession();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { currency } = useCurrency();
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const [selectedCurrency, setSelectedCurrency] = useState(currency);
+  const [savingCurrency, setSavingCurrency] = useState(false);
+
+  useEffect(() => { setSelectedCurrency(currency); }, [currency]);
 
   useEffect(() => {
     fetch("/api/profile")
@@ -71,6 +83,25 @@ export default function ProfilePage() {
       }
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSaveCurrency() {
+    setSavingCurrency(true);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currency: selectedCurrency }),
+      });
+      if (res.ok) {
+        await queryClient.invalidateQueries({ queryKey: ["profile"] });
+        toast.success({ title: "Moneda actualizada" });
+      } else {
+        toast.error({ title: "Error al guardar la moneda" });
+      }
+    } finally {
+      setSavingCurrency(false);
     }
   }
 
@@ -163,6 +194,30 @@ export default function ProfilePage() {
           {saving ? "Guardando..." : "Guardar cambios"}
         </button>
       </form>
+
+      {/* Currency */}
+      <div className="mt-4 bg-white rounded-2xl shadow p-6">
+        <h2 className="text-sm font-semibold text-gray-800 mb-0.5">Moneda</h2>
+        <p className="text-xs text-gray-400 mb-4">Se usa en toda la app para mostrar cantidades.</p>
+        <div className="flex items-center gap-3">
+          <select
+            value={selectedCurrency}
+            onChange={(e) => setSelectedCurrency(e.target.value)}
+            className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c.code} value={c.code}>{c.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={handleSaveCurrency}
+            disabled={savingCurrency || selectedCurrency === currency}
+            className="px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            {savingCurrency ? "Guardando..." : "Guardar"}
+          </button>
+        </div>
+      </div>
 
       <button
         onClick={() => signOut({ callbackUrl: "/login" })}

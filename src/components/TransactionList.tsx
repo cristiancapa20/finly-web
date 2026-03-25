@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCurrency } from "@/context/CurrencyContext";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "@/lib/toast";
 import { useSearchParams, usePathname } from "next/navigation";
@@ -64,20 +65,6 @@ function formatDate(dateStr: string) {
     month: "2-digit",
     year: "numeric",
   });
-}
-
-function formatAmount(amount: number, type: string) {
-  const sign = type === "INCOME" ? "+" : "-";
-  return `${sign}$${Math.abs(amount).toFixed(2)}`;
-}
-
-function formatBalancePlain(n: number) {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(n);
 }
 
 function getDateParts(dateStr: string) {
@@ -304,6 +291,7 @@ function EditModal({ transaction: t, categories, accounts, onClose, onSaved }: E
 }
 
 export default function TransactionList() {
+  const { formatCurrency } = useCurrency();
   const router = useTransitionRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -441,13 +429,7 @@ export default function TransactionList() {
     return { label: "Saldo actual · todas las cuentas", amount: sum };
   }, [accounts, accountIdParam]);
 
-  const formatAccountBalance = (amount: number) =>
-    new Intl.NumberFormat("es-MX", {
-      style: "currency",
-      currency: "MXN",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
+  const formatAccountBalance = formatCurrency;
 
   const inputBase =
     "rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:border-indigo-500 focus:ring-indigo-200";
@@ -669,7 +651,7 @@ export default function TransactionList() {
                           : "text-red-600"
                       }`}
                     >
-                      {formatAmount(t.amount, t.type)}
+                      {t.type === "INCOME" ? "+" : "-"}{formatCurrency(Math.abs(t.amount))}
                     </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
@@ -715,7 +697,7 @@ export default function TransactionList() {
                       </span>
                       {cuentaSaldoResumen && (
                         <span className="block mt-2 text-sm font-semibold text-indigo-700 tabular-nums">
-                          {cuentaSaldoResumen.label}: {formatBalancePlain(cuentaSaldoResumen.amount)}
+                          {cuentaSaldoResumen.label}: {formatCurrency(cuentaSaldoResumen.amount)}
                         </span>
                       )}
                     </td>
@@ -724,13 +706,13 @@ export default function TransactionList() {
                         <div>
                           <span className="text-gray-500">Ingresos </span>
                           <span className="font-semibold text-green-600">
-                            {formatAmount(listTotals.totalIncome, "INCOME")}
+                            +{formatCurrency(listTotals.totalIncome)}
                           </span>
                         </div>
                         <div>
                           <span className="text-gray-500">Gastos </span>
                           <span className="font-semibold text-red-600">
-                            {formatAmount(listTotals.totalExpenses, "EXPENSE")}
+                            -{formatCurrency(listTotals.totalExpenses)}
                           </span>
                         </div>
                         <div className="pt-1 border-t border-gray-200">
@@ -792,7 +774,7 @@ export default function TransactionList() {
                             t.type === "INCOME" ? "text-green-600" : "text-red-600"
                           }`}
                         >
-                          {formatAmount(t.amount, t.type)}
+                          {t.type === "INCOME" ? "+" : "-"}{formatCurrency(Math.abs(t.amount))}
                         </p>
                       </div>
                     </div>
@@ -837,20 +819,20 @@ export default function TransactionList() {
               </p>
               {cuentaSaldoResumen && (
                 <p className="text-sm font-semibold text-indigo-700 tabular-nums">
-                  {cuentaSaldoResumen.label}: {formatBalancePlain(cuentaSaldoResumen.amount)}
+                  {cuentaSaldoResumen.label}: {formatCurrency(cuentaSaldoResumen.amount)}
                 </p>
               )}
               <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm tabular-nums">
                 <span>
                   <span className="text-gray-500">Ingresos </span>
                   <span className="font-semibold text-green-600">
-                    {formatAmount(listTotals.totalIncome, "INCOME")}
+                    +{formatCurrency(listTotals.totalIncome)}
                   </span>
                 </span>
                 <span>
                   <span className="text-gray-500">Gastos </span>
                   <span className="font-semibold text-red-600">
-                    {formatAmount(listTotals.totalExpenses, "EXPENSE")}
+                    -{formatCurrency(listTotals.totalExpenses)}
                   </span>
                 </span>
                 <span>

@@ -6,6 +6,7 @@ import { Toaster } from "sileo";
 import { useIsPWA } from "@/hooks/useIsPWA";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { CurrencyProvider } from "@/context/CurrencyContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,8 +37,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
-        <Toaster position={toastPosition} theme="dark" />
-        {children}
+        <CurrencyProvider>
+          <Toaster position={toastPosition} theme="dark" />
+          {children}
+        </CurrencyProvider>
       </SessionProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

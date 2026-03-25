@@ -64,6 +64,11 @@ async function transactionHasIsDeleted(client: ReturnType<typeof createClient>):
   return r.rows.some((row) => String(row.name) === "isDeleted");
 }
 
+async function userHasCurrency(client: ReturnType<typeof createClient>): Promise<boolean> {
+  const r = await client.execute(`PRAGMA table_info('User')`);
+  return r.rows.some((row) => String(row.name) === "currency");
+}
+
 async function applySoftDeleteOnly(client: ReturnType<typeof createClient>) {
   const dir = "20260325103000_add_soft_delete_to_transaction";
   const sqlPath = join(MIGRATIONS_DIR, dir, "migration.sql");
@@ -71,6 +76,15 @@ async function applySoftDeleteOnly(client: ReturnType<typeof createClient>) {
   console.log(`Aplicando solo ${dir} (sin tabla _prisma_migrations en Turso)...`);
   await client.executeMultiple(sql);
   console.log("Listo: columnas isDeleted / deletedAt en Transaction.");
+}
+
+async function applyCurrencyOnly(client: ReturnType<typeof createClient>) {
+  const dir = "20260325230401_add_currency_to_user";
+  const sqlPath = join(MIGRATIONS_DIR, dir, "migration.sql");
+  const sql = readFileSync(sqlPath, "utf8");
+  console.log(`Aplicando solo ${dir} (sin tabla _prisma_migrations en Turso)...`);
+  await client.executeMultiple(sql);
+  console.log("Listo: columna currency en User.");
 }
 
 async function main() {
@@ -90,17 +104,25 @@ async function main() {
     const hasTable = await hasPrismaMigrationsTable(client);
 
     if (!hasTable) {
-      const hasCol = await transactionHasIsDeleted(client);
-      if (hasCol) {
-        console.log(
-          "Turso no tiene _prisma_migrations y Transaction ya tiene isDeleted. No se aplicó nada."
-        );
-        return;
+      const hasIsDeleted = await transactionHasIsDeleted(client);
+      if (!hasIsDeleted) {
+        await applySoftDeleteOnly(client);
       }
-      await applySoftDeleteOnly(client);
-      console.log(
-        "Si más adelante creás _prisma_migrations en Turso, podés usar de nuevo `npm run db:turso:migrate` para alinear el historial."
-      );
+
+      const hasCurrency = await userHasCurrency(client);
+      if (!hasCurrency) {
+        await applyCurrencyOnly(client);
+      }
+
+      if (hasIsDeleted && hasCurrency) {
+        console.log(
+          "Turso no tiene _prisma_migrations pero ya tiene todas las columnas. No se aplicó nada."
+        );
+      } else {
+        console.log(
+          "Si más adelante creás _prisma_migrations en Turso, podés usar de nuevo `npm run db:turso:migrate` para alinear el historial."
+        );
+      }
       return;
     }
 

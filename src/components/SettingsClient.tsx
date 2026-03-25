@@ -6,6 +6,7 @@ import { Trash2, Wallet, Building2, CreditCard, CircleDollarSign, Pencil, X } fr
 import { toast } from "@/lib/toast";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import type { LucideIcon } from "lucide-react";
+import { useCurrency } from "@/context/CurrencyContext";
 
 type AccountType = "CASH" | "BANK" | "CREDIT_CARD" | "OTHER";
 
@@ -52,6 +53,8 @@ const PRESET_COLORS = [
 ];
 
 export default function SettingsClient() {
+  const { formatCurrency } = useCurrency();
+
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingAccounts, setLoadingAccounts] = useState(true);
@@ -231,7 +234,8 @@ export default function SettingsClient() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Accounts Section */}
       <section>
         <div className="flex items-center justify-between mb-4">
@@ -316,7 +320,7 @@ export default function SettingsClient() {
                       <div className="text-right flex-shrink-0">
                         <p className="text-white/50 text-[10px] uppercase tracking-widest leading-none mb-0.5">Saldo</p>
                         <p className="text-white font-bold text-sm leading-tight">
-                          {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", minimumFractionDigits: 2 }).format(account.balance ?? 0)}
+                          {formatCurrency(account.balance ?? 0)}
                         </p>
                       </div>
                     </div>
@@ -439,6 +443,7 @@ export default function SettingsClient() {
         </div>
 
       </section>
+      </div>
       {/* Create Account Modal */}
       {showCreateModal && (
         <div

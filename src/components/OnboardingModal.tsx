@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { TrendingUp } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { CURRENCIES } from "@/lib/currency";
+import { useQueryClient } from "@tanstack/react-query";
 
 type AccountType = "CASH" | "BANK" | "CREDIT_CARD" | "OTHER";
 
@@ -21,8 +23,12 @@ const CARD_COLORS = [
 
 export default function OnboardingModal() {
   const { status } = useSession();
+  const queryClient = useQueryClient();
   const [show, setShow] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<0 | 1 | 2>(0);
+
+  const [selectedCurrency, setSelectedCurrency] = useState("USD");
+  const [savingCurrency, setSavingCurrency] = useState(false);
 
   const [name, setName] = useState("");
   const [type, setType] = useState<AccountType>("BANK");
@@ -31,9 +37,6 @@ export default function OnboardingModal() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Esperar que la sesión esté lista antes de consultar las cuentas.
-  // IMPORTANTE: `status` debe estar en el array de dependencias para que el efecto
-  // se re-ejecute cuando la sesión pase de "loading" a "authenticated".
   useEffect(() => {
     if (status !== "authenticated") return;
 
@@ -46,6 +49,21 @@ export default function OnboardingModal() {
       })
       .catch(() => {});
   }, [status]);
+
+  async function handleSaveCurrencyAndContinue() {
+    setSavingCurrency(true);
+    try {
+      await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currency: selectedCurrency }),
+      });
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+    } finally {
+      setSavingCurrency(false);
+    }
+    setStep(1);
+  }
 
   async function handleCreate() {
     setError("");
@@ -88,24 +106,60 @@ export default function OnboardingModal() {
           </div>
           <h2 className="text-lg font-bold text-gray-900">¡Bienvenido a FinlyCR!</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Para empezar, registra tu primera cuenta bancaria o de efectivo.
+            {step === 0
+              ? "Primero, ¿en qué moneda manejas tus finanzas?"
+              : "Ahora registra tu primera cuenta bancaria o de efectivo."}
           </p>
         </div>
 
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="flex items-center gap-1.5">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${step === 1 ? "bg-indigo-600 text-white" : "bg-indigo-100 text-indigo-600"}`}>1</div>
-            <span className={`text-xs font-medium ${step === 1 ? "text-indigo-600" : "text-gray-400"}`}>Información</span>
-          </div>
-          <div className="w-8 h-px bg-gray-300" />
-          <div className="flex items-center gap-1.5">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${step === 2 ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-400"}`}>2</div>
-            <span className={`text-xs font-medium ${step === 2 ? "text-indigo-600" : "text-gray-400"}`}>Saldo</span>
-          </div>
+        <div className="flex items-center justify-center gap-2 mb-6">
+          {[
+            { n: 0, label: "Moneda" },
+            { n: 1, label: "Cuenta" },
+            { n: 2, label: "Saldo" },
+          ].map(({ n, label }, i) => (
+            <div key={n} className="flex items-center">
+              {i > 0 && <div className="w-6 h-px bg-gray-300 mx-1" />}
+              <div className="flex items-center gap-1.5">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${step === n ? "bg-indigo-600 text-white" : step > n ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-400"}`}>
+                  {n + 1}
+                </div>
+                <span className={`text-xs font-medium ${step === n ? "text-indigo-600" : "text-gray-400"}`}>{label}</span>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Step 1 */}
+        {/* Step 0 — Currency */}
+        {step === 0 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Moneda principal</label>
+              <select
+                value={selectedCurrency}
+                onChange={(e) => setSelectedCurrency(e.target.value)}
+                autoFocus
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c.code} value={c.code}>{c.label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">Puedes cambiarla más adelante en tu perfil.</p>
+            </div>
+            <button
+              type="button"
+              disabled={savingCurrency}
+              onClick={handleSaveCurrencyAndContinue}
+              className="w-full bg-indigo-600 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            >
+              {savingCurrency ? "Guardando..." : "Continuar →"}
+            </button>
+          </div>
+        )}
+
+        {/* Step 1 — Account info */}
         {step === 1 && (
           <div className="space-y-4">
             <div>
@@ -161,7 +215,7 @@ export default function OnboardingModal() {
           </div>
         )}
 
-        {/* Step 2 */}
+        {/* Step 2 — Balance */}
         {step === 2 && (
           <div className="space-y-4">
             {/* Preview card */}

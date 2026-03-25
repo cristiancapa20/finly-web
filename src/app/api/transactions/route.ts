@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { amountInputToCents, centsToAmount } from "@/lib/money";
+import { formatCurrency } from "@/lib/currency";
 import { getLoanManagedTransactionIds } from "@/lib/loanManagedTransaction";
 import { prisma } from "@/lib/prisma";
 
@@ -154,10 +155,13 @@ export async function POST(request: NextRequest) {
 
   // Validar saldo suficiente si es un gasto
   if (type === "EXPENSE") {
-    const account = await prisma.account.findUnique({
-      where: { id: accountId, userId: session.user.id },
-      include: { transactions: { select: { amount: true, type: true } } },
-    });
+    const [account, userRecord] = await Promise.all([
+      prisma.account.findUnique({
+        where: { id: accountId, userId: session.user.id },
+        include: { transactions: { select: { amount: true, type: true } } },
+      }),
+      prisma.user.findUnique({ where: { id: session.user.id }, select: { currency: true } }),
+    ]);
 
     if (!account) {
       return NextResponse.json({ error: "Cuenta no encontrada" }, { status: 404 });
@@ -170,8 +174,9 @@ export async function POST(request: NextRequest) {
     const currentBalance = account.initialBalance + txBalance / 100;
 
     if (amount > currentBalance) {
+      const currency = userRecord?.currency ?? "USD";
       return NextResponse.json(
-        { error: `Saldo insuficiente. Tu saldo actual es ${new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(currentBalance)}.` },
+        { error: `Saldo insuficiente. Tu saldo actual es ${formatCurrency(currentBalance, currency)}.` },
         { status: 422 }
       );
     }

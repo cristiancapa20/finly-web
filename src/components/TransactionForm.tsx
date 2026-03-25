@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "@/lib/toast";
+import { useCurrency } from "@/context/CurrencyContext";
 
 interface Category {
   id: string;
@@ -36,6 +37,7 @@ const defaultForm = (): FormState => ({
 });
 
 export default function TransactionForm() {
+  const { formatCurrency } = useCurrency();
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<FormState>(defaultForm());
   const [categories, setCategories] = useState<Category[]>([]);
@@ -210,7 +212,7 @@ export default function TransactionForm() {
                   <option value="">Seleccionar...</option>
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
-                      {a.name} — {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(a.balance)}
+                      {a.name} — {formatCurrency(a.balance)}
                     </option>
                   ))}
                 </select>
@@ -219,7 +221,7 @@ export default function TransactionForm() {
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                     </svg>
-                    Saldo insuficiente. Disponible: {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(selectedAccount?.balance ?? 0)}
+                    Saldo insuficiente. Disponible: {formatCurrency(selectedAccount?.balance ?? 0)}
                   </p>
                 )}
               </div>

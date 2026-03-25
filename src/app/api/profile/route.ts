@@ -10,7 +10,7 @@ export async function GET() {
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { id: true, email: true, displayName: true, avatar: true, createdAt: true },
+      select: { id: true, email: true, displayName: true, avatar: true, currency: true, createdAt: true },
     });
 
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -32,15 +32,16 @@ export async function PATCH(req: NextRequest) {
     if (!existing) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     const body = await req.json();
-    const { displayName, avatar } = body;
+    const { displayName, avatar, currency } = body;
 
     const user = await prisma.user.update({
       where: { id: session.user.id },
       data: {
         ...(displayName !== undefined ? { displayName: displayName || null } : {}),
         ...(avatar !== undefined ? { avatar: avatar || null } : {}),
+        ...(currency !== undefined ? { currency } : {}),
       },
-      select: { id: true, email: true, displayName: true, avatar: true },
+      select: { id: true, email: true, displayName: true, avatar: true, currency: true },
     });
 
     return NextResponse.json({ data: user });
