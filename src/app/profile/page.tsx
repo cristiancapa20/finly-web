@@ -199,11 +199,11 @@ export default function ProfilePage() {
       <div className="mt-4 bg-white rounded-2xl shadow p-6">
         <h2 className="text-sm font-semibold text-gray-800 mb-0.5">Moneda</h2>
         <p className="text-xs text-gray-400 mb-4">Se usa en toda la app para mostrar cantidades.</p>
-        <div className="flex items-center gap-3">
+        <div className="space-y-3">
           <select
             value={selectedCurrency}
             onChange={(e) => setSelectedCurrency(e.target.value)}
-            className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
           >
             {CURRENCIES.map((c) => (
               <option key={c.code} value={c.code}>{c.label}</option>
@@ -212,7 +212,7 @@ export default function ProfilePage() {
           <button
             onClick={handleSaveCurrency}
             disabled={savingCurrency || selectedCurrency === currency}
-            className="px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            className="w-full py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
           >
             {savingCurrency ? "Guardando..." : "Guardar"}
           </button>
