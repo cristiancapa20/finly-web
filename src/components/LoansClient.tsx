@@ -895,26 +895,27 @@ export default function LoansClient() {
         </div>
       </div>
 
-      {/* Tabs + New button */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex bg-gray-100 rounded-lg p-1 gap-1">
+      {/* Tabs + New button: columna en móvil para no comprimir el switch */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="flex w-full min-w-0 bg-gray-100 rounded-lg p-1 gap-1">
           {([["LENT", "Préstamos", lent.length], ["OWED", "Deudas", owned.length]] as const).map(([val, label, count]) => (
             <button
               key={val}
+              type="button"
               onClick={() => {
                 setTab(val);
                 setStatusTab("pending");
               }}
-              className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-md transition-all ${tab === val ? (val === "OWED" ? "bg-red-100 shadow-sm text-red-700" : "bg-green-100 shadow-sm text-green-700") : "text-gray-500 hover:text-gray-700"}`}
+              className={`flex flex-1 min-w-0 items-center justify-center gap-1 sm:gap-1.5 rounded-md py-2.5 px-2 sm:py-1.5 sm:px-3 md:px-4 text-xs sm:text-sm font-medium transition-all ${tab === val ? (val === "OWED" ? "bg-red-100 shadow-sm text-red-700" : "bg-green-100 shadow-sm text-green-700") : "text-gray-500 hover:text-gray-700"}`}
             >
               {val === "LENT" ? (
-                <HandCoins className={`w-4 h-4 ${tab === val ? "text-green-600" : "text-gray-400"}`} />
+                <HandCoins className={`w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 ${tab === val ? "text-green-600" : "text-gray-400"}`} />
               ) : (
-                <CreditCard className={`w-4 h-4 ${tab === val ? "text-red-600" : "text-gray-400"}`} />
+                <CreditCard className={`w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 ${tab === val ? "text-red-600" : "text-gray-400"}`} />
               )}
-              {label}
+              <span className="truncate">{label}</span>
               {count > 0 && (
-                <span className={`text-xs rounded-full px-1.5 py-0.5 font-semibold ${tab === val ? (val === "OWED" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600") : "bg-gray-200 text-gray-500"}`}>
+                <span className={`flex-shrink-0 text-[10px] sm:text-xs rounded-full px-1 sm:px-1.5 py-0.5 font-semibold tabular-nums ${tab === val ? (val === "OWED" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600") : "bg-gray-200 text-gray-500"}`}>
                   {count}
                 </span>
               )}
@@ -922,10 +923,11 @@ export default function LoansClient() {
           ))}
         </div>
         <button
+          type="button"
           onClick={() => setShowNewModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+          className="flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 px-4 py-2.5 sm:py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm active:bg-indigo-800"
         >
-          <Plus className="w-4 h-4 text-white" />
+          <Plus className="w-4 h-4 text-white flex-shrink-0" />
           <span className="hidden sm:inline">Nuevo registro</span>
           <span className="sm:hidden">Nuevo</span>
         </button>
