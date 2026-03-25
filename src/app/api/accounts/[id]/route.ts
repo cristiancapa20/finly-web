@@ -3,6 +3,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+function missingSoftDeleteColumn(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  return (
+    message.includes("Unknown argument `isDeleted`") ||
+    message.includes("no such column: main.Transaction.isDeleted")
+  );
+}
+
+async function findAccountForBalanceEdit(id: string, userId: string) {
+  try {
+    return await prisma.account.findUnique({
+      where: { id, userId },
+      include: {
+        transactions: {
+          where: { isDeleted: false },
+          select: { amount: true, type: true },
+        },
+      },
+    });
+  } catch (error) {
+    if (!missingSoftDeleteColumn(error)) throw error;
+    return prisma.account.findUnique({
+      where: { id, userId },
+      include: {
+        transactions: { select: { amount: true, type: true } },
+      },
+    });
+  }
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,11 +47,7 @@ export async function PATCH(
   let newInitialBalance: number | undefined;
 
   if (balance !== undefined && balance !== "") {
-    // Calcular el txBalance actual para derivar el initialBalance correcto
-    const existing = await prisma.account.findUnique({
-      where: { id, userId: session.user.id },
-      include: { transactions: { select: { amount: true, type: true } } },
-    });
+    const existing = await findAccountForBalanceEdit(id, session.user.id);
     if (existing) {
       const txBalance = existing.transactions.reduce(
         (sum, t) => (t.type === "INCOME" ? sum + t.amount : sum - t.amount),
