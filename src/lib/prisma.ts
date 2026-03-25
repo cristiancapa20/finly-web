@@ -5,9 +5,16 @@ import { createClient } from "@libsql/client";
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 function createPrisma() {
-  if (process.env.TURSO_DATABASE_URL) {
+  const useTursoInDev = process.env.USE_TURSO_IN_DEV === "true";
+  const useTursoInProd =
+    process.env.NODE_ENV === "production" &&
+    Boolean(process.env.TURSO_DATABASE_URL);
+  const tursoUrl = process.env.TURSO_DATABASE_URL;
+  const useTurso = (useTursoInProd || useTursoInDev) && Boolean(tursoUrl);
+
+  if (useTurso && tursoUrl) {
     const client = createClient({
-      url: process.env.TURSO_DATABASE_URL,
+      url: tursoUrl,
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
     const adapter = new PrismaLibSQL(client);

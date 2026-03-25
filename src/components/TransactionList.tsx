@@ -320,9 +320,29 @@ export default function TransactionList() {
 
     try {
       const res = await fetch(`/api/transactions?${params}`);
-      const data: TransactionsResponse = await res.json();
+      if (!res.ok) {
+        setTransactions([]);
+        setTotal(0);
+        toast.error({ title: "No se pudieron cargar las transacciones" });
+        return;
+      }
+
+      let data: TransactionsResponse | null = null;
+      try {
+        data = (await res.json()) as TransactionsResponse;
+      } catch {
+        setTransactions([]);
+        setTotal(0);
+        toast.error({ title: "Respuesta inválida al cargar transacciones" });
+        return;
+      }
+
       setTransactions(data.data ?? []);
       setTotal(data.total ?? 0);
+    } catch {
+      setTransactions([]);
+      setTotal(0);
+      toast.error({ title: "Error de red al cargar transacciones" });
     } finally {
       setIsLoading(false);
     }

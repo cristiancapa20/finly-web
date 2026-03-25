@@ -5,49 +5,110 @@ import { authOptions } from "@/lib/auth";
 import { amountInputToCents, centsToAmount } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 
+type TransactionListRow = {
+  id: string;
+  amount: number;
+  type: string;
+  description: string | null;
+  date: Date;
+  createdAt: Date;
+  category: { id: string; name: string; color: string };
+  account: { id: string; name: string };
+};
+
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const { searchParams } = request.nextUrl;
-  const type = searchParams.get("type");
-  const categoryId = searchParams.get("categoryId");
-  const accountId = searchParams.get("accountId");
-  const dateFrom = searchParams.get("dateFrom");
-  const dateTo = searchParams.get("dateTo");
-  const page = parseInt(searchParams.get("page") ?? "1", 10);
-  const limit = parseInt(searchParams.get("limit") ?? "20", 10);
+    const { searchParams } = request.nextUrl;
+    const type = searchParams.get("type");
+    const categoryId = searchParams.get("categoryId");
+    const accountId = searchParams.get("accountId");
+    const dateFrom = searchParams.get("dateFrom");
+    const dateTo = searchParams.get("dateTo");
+    const page = parseInt(searchParams.get("page") ?? "1", 10);
+    const limit = parseInt(searchParams.get("limit") ?? "20", 10);
 
-  const where: Prisma.TransactionWhereInput = { userId: session.user.id, isDeleted: false };
-  if (type) where.type = type;
-  if (categoryId) where.categoryId = categoryId;
-  if (accountId) where.accountId = accountId;
-  if (dateFrom || dateTo) {
-    where.date = {
-      ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
-      ...(dateTo ? { lte: new Date(dateTo) } : {}),
+    const baseWhere: Prisma.TransactionWhereInput = { userId: session.user.id };
+    if (type) baseWhere.type = type;
+    if (categoryId) baseWhere.categoryId = categoryId;
+    if (accountId) baseWhere.accountId = accountId;
+    if (dateFrom || dateTo) {
+      baseWhere.date = {
+        ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+        ...(dateTo ? { lte: new Date(dateTo) } : {}),
+      };
+    }
+
+    const whereWithSoftDelete: Prisma.TransactionWhereInput = {
+      ...baseWhere,
+      isDeleted: false,
     };
+
+    let transactions: TransactionListRow[] = [];
+    let total: number;
+    try {
+      [transactions, total] = await Promise.all([
+        prisma.transaction.findMany({
+          where: whereWithSoftDelete,
+          select: {
+            id: true,
+            amount: true,
+            type: true,
+            description: true,
+            date: true,
+            createdAt: true,
+            category: { select: { id: true, name: true, color: true } },
+            account: { select: { id: true, name: true } },
+          },
+          orderBy: { date: "desc" },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.transaction.count({ where: whereWithSoftDelete }),
+      ]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      const missingSoftDeleteSupport =
+        message.includes("Unknown argument `isDeleted`") ||
+        message.includes("no such column: main.Transaction.isDeleted");
+      if (!missingSoftDeleteSupport) throw error;
+
+      // Fallback temporal para clientes Prisma desactualizados en runtime.
+      [transactions, total] = await Promise.all([
+        prisma.transaction.findMany({
+          where: baseWhere,
+          select: {
+            id: true,
+            amount: true,
+            type: true,
+            description: true,
+            date: true,
+            createdAt: true,
+            category: { select: { id: true, name: true, color: true } },
+            account: { select: { id: true, name: true } },
+          },
+          orderBy: { date: "desc" },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.transaction.count({ where: baseWhere }),
+      ]);
+    }
+
+    const data = transactions.map((t) => ({
+      ...t,
+      amount: centsToAmount(t.amount),
+    }));
+
+    return NextResponse.json({ data, total, page, limit });
+  } catch (error) {
+    console.error("GET /api/transactions error:", error);
+    return NextResponse.json({ error: "Error al cargar transacciones" }, { status: 500 });
   }
-
-  const [transactions, total] = await Promise.all([
-    prisma.transaction.findMany({
-      where,
-      include: { category: true, account: true },
-      orderBy: { date: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.transaction.count({ where }),
-  ]);
-
-  const data = transactions.map((t) => ({
-    ...t,
-    amount: centsToAmount(t.amount),
-  }));
-
-  return NextResponse.json({ data, total, page, limit });
 }
 
 export async function POST(request: NextRequest) {

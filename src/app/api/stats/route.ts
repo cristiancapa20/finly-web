@@ -35,7 +35,12 @@ export async function GET(request: NextRequest) {
       date: { gte: startDate, lt: endDate },
       ...(accountId ? { accountId } : {}),
     },
-    include: { category: true },
+    select: {
+      amount: true,
+      type: true,
+      categoryId: true,
+      category: { select: { name: true, color: true } },
+    },
   });
 
   let totalIncome = 0;
