@@ -4,6 +4,17 @@ import { useEffect, useState } from "react";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "sileo";
 import { useIsPWA } from "@/hooks/useIsPWA";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60, // 1 minuto
+      retry: 1,
+    },
+  },
+});
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -23,9 +34,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const toastPosition = isPWA ? "top-center" : isMobile ? "bottom-right" : "top-right";
 
   return (
-    <SessionProvider>
-      <Toaster position={toastPosition} theme="dark" />
-      {children}
-    </SessionProvider>
+    <QueryClientProvider client={queryClient}>
+      <SessionProvider>
+        <Toaster position={toastPosition} theme="dark" />
+        {children}
+      </SessionProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }

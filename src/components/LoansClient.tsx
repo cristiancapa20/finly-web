@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "@/lib/toast";
 import { Plus, X, Trash2, ChevronDown, ChevronUp, CheckCircle, RotateCcw, CreditCard, HandCoins, Bell, AlertTriangle, Pencil } from "lucide-react";
@@ -824,19 +825,17 @@ function LoanCard({
 
 /* ─── Main Component ─── */
 export default function LoansClient() {
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<"OWED" | "LENT">("LENT");
   /** Ver solo pendientes o solo ya pagadas dentro del tab Préstamos/Deudas */
   const [statusTab, setStatusTab] = useState<"pending" | "paid">("pending");
   const [showNewModal, setShowNewModal] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/loans")
-      .then(r => r.json())
-      .then(d => { if (d.data) setLoans(d.data); })
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, isLoading: loading } = useQuery<{ data: Loan[] }>({
+    queryKey: ["loans"],
+    queryFn: () => fetch("/api/loans").then(r => r.json()),
+  });
+  const loans: Loan[] = data?.data ?? [];
 
   const owned = loans.filter(l => l.type === "OWED");
   const lent  = loans.filter(l => l.type === "LENT");
@@ -847,28 +846,36 @@ export default function LoansClient() {
   const totalLent    = lent.filter(l => l.status === "ACTIVE").reduce((s, l) => s + l.remaining, 0);
 
   function handleCreated(loan: Loan) {
-    setLoans(prev => [loan, ...prev]);
+    queryClient.setQueryData<{ data: Loan[] }>(["loans"], old => ({
+      data: [loan, ...(old?.data ?? [])],
+    }));
     setTab(loan.type);
     setStatusTab("pending");
   }
 
   function handleDelete(id: string) {
-    setLoans(prev => prev.filter(l => l.id !== id));
+    queryClient.setQueryData<{ data: Loan[] }>(["loans"], old => ({
+      data: (old?.data ?? []).filter(l => l.id !== id),
+    }));
   }
 
   function handlePaymentAdded(loanId: string, payment: LoanPayment) {
-    setLoans(prev => prev.map(l => {
-      if (l.id !== loanId) return l;
-      const newPayments = [payment, ...l.payments];
-      const paidTotal = newPayments.reduce((s, p) => s + p.amount, 0);
-      const newRemaining = Math.max(0, l.amount - paidTotal);
-      const newStatus = paidTotal >= l.amount ? "PAID" : l.status;
-      return { ...l, payments: newPayments, remaining: newRemaining, status: newStatus };
+    queryClient.setQueryData<{ data: Loan[] }>(["loans"], old => ({
+      data: (old?.data ?? []).map(l => {
+        if (l.id !== loanId) return l;
+        const newPayments = [payment, ...l.payments];
+        const paidTotal = newPayments.reduce((s, p) => s + p.amount, 0);
+        const newRemaining = Math.max(0, l.amount - paidTotal);
+        const newStatus = paidTotal >= l.amount ? "PAID" : l.status;
+        return { ...l, payments: newPayments, remaining: newRemaining, status: newStatus };
+      }),
     }));
   }
 
   function handleStatusToggled(updated: Loan) {
-    setLoans(prev => prev.map(l => l.id === updated.id ? updated : l));
+    queryClient.setQueryData<{ data: Loan[] }>(["loans"], old => ({
+      data: (old?.data ?? []).map(l => l.id === updated.id ? updated : l),
+    }));
   }
 
   return (

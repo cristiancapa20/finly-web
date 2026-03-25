@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Wallet, TrendingUp, TrendingDown } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import {
@@ -112,61 +113,31 @@ function addMonths(yyyyMm: string, delta: number) {
 export default function DashboardClient() {
   const [selectedMonth, setSelectedMonth] = useState(getMonthString(new Date()));
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
-  const [accounts, setAccounts] = useState<AccountFilterChipItem[]>([]);
-  const [monthStats, setMonthStats] = useState<MonthStats | null>(null);
-  const [monthlyData, setMonthlyData] = useState<MonthlyDataPoint[]>([]);
-  const [loadingStats, setLoadingStats] = useState(true);
-  const [loadingMonthly, setLoadingMonthly] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/accounts")
-      .then((r) => r.json())
-      .then((data: { data?: AccountFilterChipItem[] }) => {
-        if (data.data) setAccounts(data.data);
-      });
-  }, []);
+  const { data: accountsData } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: () => fetch("/api/accounts").then((r) => r.json()),
+  });
+  const accounts: AccountFilterChipItem[] = accountsData?.data ?? [];
 
-  const fetchMonthStats = useCallback(async (month: string, accountId: string) => {
-    setLoadingStats(true);
-    try {
-      const params = new URLSearchParams({ month });
-      if (accountId) params.set("accountId", accountId);
-      const res = await fetch(`/api/stats?${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        setMonthStats(data);
-      } else {
-        setMonthStats(null);
-      }
-    } catch {
-      setMonthStats(null);
-    } finally {
-      setLoadingStats(false);
-    }
-  }, []);
+  const { data: monthStats, isLoading: loadingStats } = useQuery<MonthStats>({
+    queryKey: ["stats", selectedMonth, selectedAccountId],
+    queryFn: () => {
+      const params = new URLSearchParams({ month: selectedMonth });
+      if (selectedAccountId) params.set("accountId", selectedAccountId);
+      return fetch(`/api/stats?${params}`).then((r) => r.json());
+    },
+  });
 
-  const fetchMonthlyData = useCallback(async (accountId: string) => {
-    setLoadingMonthly(true);
-    try {
+  const { data: monthlyRaw, isLoading: loadingMonthly } = useQuery<{ data: MonthlyDataPoint[] }>({
+    queryKey: ["stats-monthly", selectedAccountId],
+    queryFn: () => {
       const params = new URLSearchParams({ months: "6" });
-      if (accountId) params.set("accountId", accountId);
-      const res = await fetch(`/api/stats/monthly?${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        setMonthlyData(data.data);
-      }
-    } finally {
-      setLoadingMonthly(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchMonthStats(selectedMonth, selectedAccountId);
-  }, [selectedMonth, selectedAccountId, fetchMonthStats]);
-
-  useEffect(() => {
-    fetchMonthlyData(selectedAccountId);
-  }, [selectedAccountId, fetchMonthlyData]);
+      if (selectedAccountId) params.set("accountId", selectedAccountId);
+      return fetch(`/api/stats/monthly?${params}`).then((r) => r.json());
+    },
+  });
+  const monthlyData: MonthlyDataPoint[] = monthlyRaw?.data ?? [];
 
   const handlePrev = () => setSelectedMonth((m) => addMonths(m, -1));
   const handleNext = () => {

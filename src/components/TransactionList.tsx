@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "@/lib/toast";
 import { useSearchParams, usePathname } from "next/navigation";
@@ -314,84 +315,50 @@ export default function TransactionList() {
   const dateToParam = searchParams.get("dateTo") ?? "";
   const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [accounts, setAccounts] = useState<AccountFilterChipItem[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [total, setTotal] = useState(0);
-  const [listTotals, setListTotals] = useState<TransactionsListTotals | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   // const [isExporting, setIsExporting] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/categories").then((r) => r.json()),
-      fetch("/api/accounts").then((r) => r.json()),
-    ]).then(([catRes, accRes]) => {
-      if (catRes.data) setCategories(catRes.data);
-      if (accRes.data) setAccounts(accRes.data);
-    });
-  }, []);
+  const { data: categoriesData } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => fetch("/api/categories").then((r) => r.json()),
+  });
+  const categories: Category[] = categoriesData?.data ?? [];
 
-  const fetchTransactions = useCallback(async () => {
-    setIsLoading(true);
-    const params = new URLSearchParams();
-    if (typeParam) params.set("type", typeParam);
-    if (categoryIdParam) params.set("categoryId", categoryIdParam);
-    if (accountIdParam) params.set("accountId", accountIdParam);
-    if (dateFromParam) params.set("dateFrom", dateFromParam);
-    if (dateToParam) params.set("dateTo", dateToParam);
-    params.set("page", String(pageParam));
-    params.set("limit", String(LIMIT));
+  const { data: accountsData } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: () => fetch("/api/accounts").then((r) => r.json()),
+  });
+  const accounts: AccountFilterChipItem[] = accountsData?.data ?? [];
 
-    try {
+  const txQueryKey = ["transactions", typeParam, categoryIdParam, accountIdParam, dateFromParam, dateToParam, pageParam];
+
+  const { data: txData, isLoading } = useQuery<TransactionsResponse>({
+    queryKey: txQueryKey,
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (typeParam) params.set("type", typeParam);
+      if (categoryIdParam) params.set("categoryId", categoryIdParam);
+      if (accountIdParam) params.set("accountId", accountIdParam);
+      if (dateFromParam) params.set("dateFrom", dateFromParam);
+      if (dateToParam) params.set("dateTo", dateToParam);
+      params.set("page", String(pageParam));
+      params.set("limit", String(LIMIT));
       const res = await fetch(`/api/transactions?${params}`);
-      if (!res.ok) {
-        setTransactions([]);
-        setTotal(0);
-        setListTotals(null);
-        toast.error({ title: "No se pudieron cargar las transacciones" });
-        return;
-      }
+      if (!res.ok) throw new Error("No se pudieron cargar las transacciones");
+      return res.json();
+    },
+  });
 
-      let data: TransactionsResponse | null = null;
-      try {
-        data = (await res.json()) as TransactionsResponse;
-      } catch {
-        setTransactions([]);
-        setTotal(0);
-        setListTotals(null);
-        toast.error({ title: "Respuesta inválida al cargar transacciones" });
-        return;
-      }
-
-      setTransactions(data.data ?? []);
-      setTotal(data.total ?? 0);
-      setListTotals(
-        data.totals ?? {
-          totalIncome: 0,
-          totalExpenses: 0,
-          net: 0,
-        }
-      );
-    } catch {
-      setTransactions([]);
-      setTotal(0);
-      setListTotals(null);
-      toast.error({ title: "Error de red al cargar transacciones" });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [typeParam, categoryIdParam, accountIdParam, dateFromParam, dateToParam, pageParam]);
-
-  useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+  const transactions: Transaction[] = txData?.data ?? [];
+  const total = txData?.total ?? 0;
+  const listTotals: TransactionsListTotals = txData?.totals ?? { totalIncome: 0, totalExpenses: 0, net: 0 };
 
   async function handleSaved() {
-    await fetchTransactions();
+    await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    await queryClient.invalidateQueries({ queryKey: ["accounts"] });
     setEditingTransaction(null);
   }
 
@@ -448,7 +415,8 @@ export default function TransactionList() {
       if (res.ok) {
         setDeleteConfirmId(null);
         toast.success({ title: "Transacción eliminada" });
-        await fetchTransactions();
+        await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+        await queryClient.invalidateQueries({ queryKey: ["accounts"] });
       } else {
         toast.error({ title: "Error al eliminar la transacción" });
       }
