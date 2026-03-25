@@ -5,7 +5,7 @@ const CATEGORY_DEUDA = "Deuda";
 const CATEGORY_FALLBACK = "Otros";
 
 type LoanType = "LENT" | "OWED";
-type DbClient = typeof prisma;
+type DbClient = Pick<typeof prisma, "category" | "transaction">;
 
 function getBalanceTypeForLoan(type: LoanType) {
   return type === "OWED" ? "INCOME" : "EXPENSE";

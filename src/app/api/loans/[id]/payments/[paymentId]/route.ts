@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -24,7 +25,7 @@ export async function DELETE(
     });
     if (!payment) return NextResponse.json({ error: "Pago no encontrado" }, { status: 404 });
 
-    await db.$transaction(async (tx: any) => {
+    await db.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.loanPayment.delete({ where: { id: params.paymentId } });
 
       // Re-check si el préstamo debe volver a ACTIVE
