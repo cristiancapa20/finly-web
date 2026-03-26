@@ -6,6 +6,7 @@ import { consumeRateLimit, getClientIpFromHeaders } from "@/lib/rateLimit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FORGOT_PASSWORD_LIMIT = { limit: 5, windowMs: 15 * 60 * 1000 };
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "no-reply@finlycr.com";
 
 export async function POST(request: NextRequest) {
   const { email } = await request.json();
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
     const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
     await resend.emails.send({
-      from: "FinlyCR <noreply@finlycr.com>",
+      from: `FinlyCR <${RESEND_FROM_EMAIL}>`,
       to: user.email,
       subject: "Restablecer tu contraseña — FinlyCR",
       html: `
