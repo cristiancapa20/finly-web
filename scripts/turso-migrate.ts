@@ -69,6 +69,13 @@ async function userHasCurrency(client: ReturnType<typeof createClient>): Promise
   return r.rows.some((row) => String(row.name) === "currency");
 }
 
+async function hasPasswordResetTokenTable(client: ReturnType<typeof createClient>): Promise<boolean> {
+  const r = await client.execute(
+    `SELECT name FROM sqlite_master WHERE type='table' AND name='PasswordResetToken'`
+  );
+  return r.rows.length > 0;
+}
+
 async function applySoftDeleteOnly(client: ReturnType<typeof createClient>) {
   const dir = "20260325103000_add_soft_delete_to_transaction";
   const sqlPath = join(MIGRATIONS_DIR, dir, "migration.sql");
@@ -85,6 +92,15 @@ async function applyCurrencyOnly(client: ReturnType<typeof createClient>) {
   console.log(`Aplicando solo ${dir} (sin tabla _prisma_migrations en Turso)...`);
   await client.executeMultiple(sql);
   console.log("Listo: columna currency en User.");
+}
+
+async function applyPasswordResetTokenOnly(client: ReturnType<typeof createClient>) {
+  const dir = "20260326002903_add_password_reset_token";
+  const sqlPath = join(MIGRATIONS_DIR, dir, "migration.sql");
+  const sql = readFileSync(sqlPath, "utf8");
+  console.log(`Aplicando solo ${dir} (sin tabla _prisma_migrations en Turso)...`);
+  await client.executeMultiple(sql);
+  console.log("Listo: tabla PasswordResetToken creada.");
 }
 
 async function main() {
@@ -114,7 +130,12 @@ async function main() {
         await applyCurrencyOnly(client);
       }
 
-      if (hasIsDeleted && hasCurrency) {
+      const hasResetToken = await hasPasswordResetTokenTable(client);
+      if (!hasResetToken) {
+        await applyPasswordResetTokenOnly(client);
+      }
+
+      if (hasIsDeleted && hasCurrency && hasResetToken) {
         console.log(
           "Turso no tiene _prisma_migrations pero ya tiene todas las columnas. No se aplicó nada."
         );
