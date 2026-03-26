@@ -49,3 +49,10 @@
 .animate-fade-in-up   { animation: fadeInUp  0.45s ease-out both; }
 .animate-fade-in-left { animation: fadeInLeft 0.45s ease-out both; }
 .animate-fade-in      { animation: fadeIn     0.45s ease-out both; }
+
+/* Sileo toasts — responsive on mobile */
+@media (max-width: 767px) {
+  :root {
+    --sileo-width: calc(100vw - 2rem);
+  }
+}

@@ -32,7 +32,7 @@ function useIsMobile() {
 export default function Providers({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const isPWA = useIsPWA();
-  const toastPosition = isPWA ? "top-center" : isMobile ? "bottom-right" : "top-right";
+  const toastPosition = isPWA ? "top-center" : isMobile ? "bottom-center" : "top-right";
 
   return (
     <QueryClientProvider client={queryClient}>
