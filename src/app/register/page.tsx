@@ -14,7 +14,7 @@ interface Rule {
 }
 
 const passwordRules: Rule[] = [
-  { label: "Mínimo 6 caracteres", test: (v) => v.length >= 6 },
+  { label: "Mínimo 8 caracteres", test: (v) => v.length >= 8 },
   { label: "Al menos una letra", test: (v) => /[a-zA-Z]/.test(v) },
   { label: "Al menos un número", test: (v) => /\d/.test(v) },
 ];

@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
               <h2 className="text-xl font-bold text-gray-900">Revisa tu correo</h2>
               <p className="text-sm text-gray-500 leading-relaxed">
                 Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.
-                El enlace vence en <strong>1 hora</strong>.
+                El enlace vence en <strong>5 minutos</strong>.
               </p>
               <Link href="/login" className="block mt-4 text-sm text-indigo-600 font-medium hover:underline">
                 Volver al inicio de sesión
