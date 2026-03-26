@@ -35,7 +35,7 @@ const sections: Section[] = [
     description: "El primer paso es registrarte en la app.",
     steps: [
       { text: 'Ve a la página de registro haciendo clic en "Regístrate".' },
-      { text: "Ingresa tu nombre completo, correo electrónico y una contraseña segura (mínimo 6 caracteres, con letras y números)." },
+      { text: "Ingresa tu nombre completo, correo electrónico y una contraseña segura (mínimo 8 caracteres, con letras y números)." },
       { text: 'Haz clic en "Crear cuenta". Serás redirigido al login.' },
       { text: "Inicia sesión con tu correo y contraseña.", tip: "Tu correo y contraseña son los únicos datos que necesitas para acceder." },
     ],

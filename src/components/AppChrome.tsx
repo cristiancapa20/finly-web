@@ -1,21 +1,26 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuickTransactionButton from "@/components/QuickTransactionButton";
 import BottomNav from "@/components/BottomNav";
 import ContentWrapper from "@/components/ContentWrapper";
 
+const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
+
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
+
+  const isPublicRoute = PUBLIC_ROUTES.some((r) => pathname.startsWith(r));
 
   if (status === "loading") {
-    // Evita flicker durante hidratación/cambio de sesión
     return <main className="flex-1">{children}</main>;
   }
 
-  if (!session) {
+  if (!session || isPublicRoute) {
     return <main className="flex-1">{children}</main>;
   }
 
