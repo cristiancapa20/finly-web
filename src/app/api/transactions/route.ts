@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
       accountId,
       userId: session.user.id,
       description: description ?? null,
-      date: new Date(date),
+      date: new Date(`${date}T12:00:00`),
     },
     include: { category: true, account: true },
   });
