@@ -102,7 +102,7 @@ export default function QuickTransactionButton() {
 
             {/* Scrollable body */}
             <div className="overflow-y-auto flex-1 p-5">
-              <TransactionForm />
+              <TransactionForm onSuccess={handleClose} />
             </div>
           </div>
         </div>

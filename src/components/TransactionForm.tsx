@@ -36,7 +36,7 @@ const defaultForm = (): FormState => ({
   date: getToday(),
 });
 
-export default function TransactionForm() {
+export default function TransactionForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const { formatCurrency } = useCurrency();
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<FormState>(defaultForm());
@@ -93,6 +93,7 @@ export default function TransactionForm() {
 
       toast.success({ title: "Transacción guardada exitosamente" });
       setForm(defaultForm());
+      onSuccess?.();
     } catch {
       toast.error({ title: "Error de red al guardar la transacción" });
     } finally {
