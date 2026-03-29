@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXTAUTH_URL ?? "https://www.finlycr.com";
     const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
-    await resend.emails.send({
+    const { data, error: resendError } = await resend.emails.send({
       from: `FinlyCR <${RESEND_FROM_EMAIL}>`,
       to: user.email,
       subject: "Restablecer tu contraseña — FinlyCR",
@@ -77,8 +77,14 @@ export async function POST(request: NextRequest) {
         </div>
       `,
     });
-  } catch {
-    // Respuesta uniforme para evitar enumeración por diferencias de error/tiempo.
+
+    if (resendError) {
+      console.error("[forgot-password] Resend error:", resendError);
+    } else {
+      console.log("[forgot-password] Email enviado, id:", data?.id);
+    }
+  } catch (err) {
+    console.error("[forgot-password] Error al enviar correo:", err);
   }
 
   return NextResponse.json({ ok: true });
