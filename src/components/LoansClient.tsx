@@ -900,7 +900,7 @@ export default function LoansClient() {
       </div>
 
       {/* Tabs + New button: columna en móvil para no comprimir el switch */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 my-4">
         <div className="flex w-full min-w-0 bg-gray-100 rounded-lg p-1 gap-1">
           {([["LENT", "Préstamos", lent.length], ["OWED", "Deudas", owned.length]] as const).map(([val, label, count]) => (
             <button
@@ -939,7 +939,7 @@ export default function LoansClient() {
 
       {/* Pendientes / Pagadas (mismo tipo préstamo o deuda) */}
       {!loading && (lent.length > 0 || owned.length > 0) && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           <span className="text-xs font-medium text-gray-500 w-full sm:w-auto">Estado:</span>
           <div className="flex bg-gray-100 rounded-lg p-1 gap-1 flex-1 sm:flex-initial min-w-0">
             {(() => {
