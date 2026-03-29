@@ -41,7 +41,7 @@ export async function PATCH(
       ...(categoryId !== undefined  ? { categoryId } : {}),
       ...(accountId !== undefined   ? { accountId } : {}),
       ...(description !== undefined ? { description: description || null } : {}),
-      ...(date !== undefined        ? { date: new Date(date) } : {}),
+      ...(date !== undefined        ? { date: new Date(`${date}T12:00:00`) } : {}),
     },
     select: {
       id: true, amount: true, type: true, description: true, date: true,
