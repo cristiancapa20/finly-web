@@ -234,7 +234,7 @@ export default function SettingsClient() {
   }
 
   return (
-    <div className="space-y-8">
+    <div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Accounts Section */}
       <section>

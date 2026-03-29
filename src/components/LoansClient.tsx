@@ -132,13 +132,10 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
   const isLent = form.type === "LENT";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm" style={{ maxHeight: "90vh", overflowY: "auto" }}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[92vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
           <div>
             <h2 className="text-base font-semibold text-gray-900">Nuevo registro</h2>
             <p className="text-xs text-gray-400 mt-0.5">Préstamo o deuda</p>
@@ -147,7 +144,8 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
             <X className="w-5 h-5" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <div className="overflow-y-auto flex-1 p-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
 
           {/* Type selector */}
           <div className="grid grid-cols-2 gap-2">
@@ -325,6 +323,7 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
@@ -375,13 +374,10 @@ function AddPaymentModal({ loan, onClose, onAdded }: { loan: Loan; onClose: () =
   const inputCls = "w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:border-indigo-500 focus:ring-indigo-200 transition-colors";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[92vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
           <div>
             <h2 className="text-base font-semibold text-gray-900">Registrar pago</h2>
             <p className="text-xs text-gray-500 mt-0.5">Restante: {formatCurrency(loan.remaining)}</p>
@@ -390,7 +386,8 @@ function AddPaymentModal({ loan, onClose, onAdded }: { loan: Loan; onClose: () =
             <X className="w-5 h-5" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <div className="overflow-y-auto flex-1 p-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Monto pagado</label>
             <input type="number" min="0.01" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className={inputCls} placeholder="0.00" required />
@@ -431,6 +428,7 @@ function AddPaymentModal({ loan, onClose, onAdded }: { loan: Loan; onClose: () =
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
@@ -502,13 +500,10 @@ function EditPaymentModal({
   const inputCls = "w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:border-indigo-500 focus:ring-indigo-200 transition-colors";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[92vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
           <div>
             <h2 className="text-base font-semibold text-gray-900">Editar pago</h2>
             <p className="text-xs text-gray-500 mt-0.5">Restante: {formatCurrency(loan.remaining)}</p>
@@ -517,7 +512,8 @@ function EditPaymentModal({
             <X className="w-5 h-5" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <div className="overflow-y-auto flex-1 p-5">
+        <form onSubmit={handleSubmit} /* className="space-y-4" */>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Monto pagado</label>
             <input type="number" min="0.01" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className={inputCls} placeholder="0.00" required />
@@ -558,6 +554,7 @@ function EditPaymentModal({
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
@@ -879,7 +876,7 @@ export default function LoansClient() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white rounded-xl border border-green-200 p-4 shadow-sm">
