@@ -91,8 +91,8 @@ export async function GET(request: NextRequest) {
     if (accountId) baseWhere.accountId = accountId;
     if (dateFrom || dateTo) {
       baseWhere.date = {
-        ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
-        ...(dateTo ? { lte: new Date(dateTo) } : {}),
+        ...(dateFrom ? { gte: new Date(`${dateFrom}T00:00:00`) } : {}),
+        ...(dateTo ? { lte: new Date(`${dateTo}T23:59:59`) } : {}),
       };
     }
 

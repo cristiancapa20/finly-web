@@ -58,28 +58,6 @@ interface TransactionsResponse {
 const LIMIT = 20;
 
 
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function getDateParts(dateStr: string) {
-  const d = new Date(dateStr);
-  const day = d.getDate();
-  const dayName = d
-    .toLocaleDateString("es-ES", { weekday: "short" })
-    .replace(".", "")
-    .toUpperCase();
-  const month = d
-    .toLocaleDateString("es-ES", { month: "short" })
-    .replace(".", "")
-    .toUpperCase();
-  return { day, dayName, month };
-}
 
 function TypeBadge({ type }: { type: string }) {
   const isIncome = type === "INCOME";
@@ -299,11 +277,12 @@ export default function TransactionList() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const today = new Date().toISOString().split("T")[0];
   const typeParam = searchParams.get("type") ?? "";
   const categoryIdParam = searchParams.get("categoryId") ?? "";
   const accountIdParam = searchParams.get("accountId") ?? "";
-  const dateFromParam = searchParams.get("dateFrom") ?? "";
-  const dateToParam = searchParams.get("dateTo") ?? "";
+  const dateFromParam = searchParams.get("dateFrom") ?? today;
+  const dateToParam = searchParams.get("dateTo") ?? today;
   const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
 
   const queryClient = useQueryClient();
@@ -346,6 +325,27 @@ export default function TransactionList() {
   const transactions: Transaction[] = txData?.data ?? [];
   const total = txData?.total ?? 0;
   const listTotals: TransactionsListTotals = txData?.totals ?? { totalIncome: 0, totalExpenses: 0, net: 0 };
+
+  const groupedByDate = useMemo(() => {
+    const groups: { dateKey: string; label: string; items: Transaction[] }[] = [];
+    const map = new Map<string, Transaction[]>();
+    for (const t of transactions) {
+      const key = t.date.split("T")[0];
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(t);
+    }
+    for (const [key, items] of Array.from(map.entries())) {
+      const d = new Date(key + "T12:00:00");
+      const label = d.toLocaleDateString("es-ES", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+      groups.push({ dateKey: key, label: label.charAt(0).toUpperCase() + label.slice(1), items });
+    }
+    return groups;
+  }, [transactions]);
 
   async function handleSaved() {
     await queryClient.invalidateQueries({ queryKey: ["transactions"] });
@@ -447,7 +447,7 @@ export default function TransactionList() {
       />
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm my-4">
         <div className="flex flex-wrap gap-3 items-end">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -512,11 +512,11 @@ export default function TransactionList() {
                 type: "",
                 categoryId: "",
                 accountId: "",
-                dateFrom: "",
-                dateTo: "",
+                dateFrom: today,
+                dateTo: today,
               })
             }
-            disabled={!typeParam && !categoryIdParam && !accountIdParam && !dateFromParam && !dateToParam}
+            disabled={!typeParam && !categoryIdParam && !accountIdParam && dateFromParam === today && dateToParam === today}
             className="px-3 py-1.5 text-xs font-medium text-red-400 border border-red-300 rounded-md hover:bg-red-50 self-end disabled:opacity-0 disabled:pointer-events-none transition-colors"
           >
             Limpiar filtros
@@ -593,224 +593,194 @@ export default function TransactionList() {
         </div>
       ) : (
         <>
-          {/* Desktop table */}
-          <div className="hidden sm:block bg-white rounded-lg border border-gray-200 shadow-sm overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <span className="inline-flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" />Fecha</span>
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <span className="inline-flex items-center gap-1"><AlignLeft className="w-3.5 h-3.5" />Descripción</span>
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <span className="inline-flex items-center gap-1"><Tag className="w-3.5 h-3.5" />Categoría</span>
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <span className="inline-flex items-center gap-1"><Wallet className="w-3.5 h-3.5" />Cuenta</span>
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <span className="inline-flex items-center gap-1"><ArrowUpDown className="w-3.5 h-3.5" />Tipo</span>
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <span className="inline-flex items-center justify-end gap-1"><DollarSign className="w-3.5 h-3.5" />Monto</span>
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
-                {transactions.map((t) => (
-                  <tr key={t.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-                      {formatDate(t.date)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
-                      {t.description ?? (
-                        <span className="text-gray-400 italic">Sin descripción</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <CategoryBadge
-                        name={t.category.name}
-                        color={t.category.color}
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1.5">
-                        <Wallet className="w-3.5 h-3.5 text-gray-400" />
-                        {t.account.name}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <TypeBadge type={t.type} />
-                    </td>
-                    <td
-                      className={`px-4 py-3 text-sm font-medium text-right whitespace-nowrap ${
-                        t.type === "INCOME"
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {t.type === "INCOME" ? "+" : "-"}{formatCurrency(Math.abs(t.amount))}
-                    </td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1">
-                        {t.managedViaLoans ? (
-                          <LoansManagedHintLink />
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setEditingTransaction(t)}
-                              className="p-1.5 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                              title="Editar transacción"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <DeleteButton
-                              id={t.id}
-                              confirmId={deleteConfirmId}
-                              isDeleting={isDeleting}
-                              onRequestDelete={(id) => setDeleteConfirmId(id)}
-                              onConfirmDelete={handleConfirmDelete}
-                              onCancelDelete={() => setDeleteConfirmId(null)}
-                            />
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              {listTotals !== null && total > 0 && (
-                <tfoot>
-                  <tr className="bg-gray-50 border-t-2 border-gray-200">
-                    <td colSpan={5} className="px-4 py-3 text-sm font-medium text-gray-700 text-right align-top">
-                      Totales
-                      <span className="block text-xs font-normal text-gray-500 mt-0.5 ml-auto">
-                        {total} {total === 1 ? "movimiento" : "movimientos"} con el filtro actual, sumando todas las páginas.
-                        {(dateFromParam || dateToParam) && (
-                          <span className="block text-gray-400 mt-1">
-                            El neto es solo del rango de fechas; el saldo de la cuenta es al día de hoy.
-                          </span>
-                        )}
-                      </span>
-                      {cuentaSaldoResumen && (
-                        <span className="block mt-2 text-sm font-semibold text-indigo-700 tabular-nums">
-                          {cuentaSaldoResumen.label}: {formatCurrency(cuentaSaldoResumen.amount)}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right align-top">
-                      <div className="text-xs space-y-1.5 tabular-nums">
-                        <div>
-                          <span className="text-gray-500">Ingresos </span>
-                          <span className="font-semibold text-green-600">
-                            +{formatCurrency(listTotals.totalIncome)}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Gastos </span>
-                          <span className="font-semibold text-red-600">
-                            -{formatCurrency(listTotals.totalExpenses)}
-                          </span>
-                        </div>
-                        <div className="pt-1 border-t border-gray-200">
-                          <span className="text-gray-500">Neto </span>
-                          <span
-                            className={`font-bold ${
-                              listTotals.net >= 0 ? "text-indigo-600" : "text-red-600"
-                            }`}
-                          >
-                            {listTotals.net >= 0 ? "+" : "-"}${Math.abs(listTotals.net).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3" aria-hidden />
-                  </tr>
-                </tfoot>
-              )}
-            </table>
-          </div>
-
-          {/* Mobile cards */}
-          <div className="sm:hidden space-y-3">
-            {transactions.map((t) => {
-              const { day, dayName, month } = getDateParts(t.date);
-              return (
-                <div
-                  key={t.id}
-                  className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex"
-                >
-                  {/* Left date panel */}
-                  <div className="bg-gray-100 flex flex-col items-center justify-center px-3 py-3 min-w-[58px] border-r border-gray-200 flex-shrink-0">
-                    <span className="text-2xl font-bold text-gray-800 leading-none">{day}</span>
-                    <span className="text-xs font-medium text-gray-500 mt-0.5">{dayName}</span>
-                    <span className="text-xs text-gray-400 mt-0.5">{month}</span>
-                  </div>
-
-                  {/* Right content */}
-                  <div className="flex flex-col flex-1 min-w-0">
-                    {/* Main content */}
-                    <div className="flex items-start justify-between px-3 pt-3 pb-2">
-                      <div className="flex-1 min-w-0 pr-2">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
+          {/* Desktop grouped by date */}
+          <div className="hidden sm:flex flex-col gap-4">
+            {groupedByDate.map((group) => (
+              <div key={group.dateKey} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                <div className="px-4 py-2.5 bg-gray-900 rounded-t-lg">
+                  <h3 className="text-sm font-semibold text-white flex items-center gap-1.5">
+                    <CalendarDays className="w-4 h-4 text-gray-300" />
+                    {group.label}
+                  </h3>
+                </div>
+                <table className="min-w-full">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                        <span className="inline-flex items-center gap-1"><AlignLeft className="w-3.5 h-3.5" />Descripción</span>
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                        <span className="inline-flex items-center gap-1"><Tag className="w-3.5 h-3.5" />Categoría</span>
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                        <span className="inline-flex items-center gap-1"><Wallet className="w-3.5 h-3.5" />Cuenta</span>
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                        <span className="inline-flex items-center gap-1"><ArrowUpDown className="w-3.5 h-3.5" />Tipo</span>
+                      </th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
+                        <span className="inline-flex items-center justify-end gap-1"><DollarSign className="w-3.5 h-3.5" />Monto</span>
+                      </th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
+                        Acciones
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {group.items.map((t) => (
+                      <tr key={t.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
                           {t.description ?? (
-                            <span className="text-gray-400 italic font-normal">Sin descripción</span>
+                            <span className="text-gray-400 italic">Sin descripción</span>
                           )}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <CategoryBadge name={t.category.name} color={t.category.color} />
-                          <span className="inline-flex items-center gap-1 text-xs text-gray-400">
-                            <Wallet className="w-3 h-3" />
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Wallet className="w-3.5 h-3.5 text-gray-400" />
                             {t.account.name}
                           </span>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0 text-right">
-                        <p
-                          className={`text-sm font-bold ${
-                            t.type === "INCOME" ? "text-green-600" : "text-red-600"
-                          }`}
-                        >
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <TypeBadge type={t.type} />
+                        </td>
+                        <td className={`px-4 py-3 text-sm font-medium text-right whitespace-nowrap ${t.type === "INCOME" ? "text-green-600" : "text-red-600"}`}>
                           {t.type === "INCOME" ? "+" : "-"}{formatCurrency(Math.abs(t.amount))}
-                        </p>
-                      </div>
-                    </div>
+                        </td>
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1">
+                            {t.managedViaLoans ? (
+                              <LoansManagedHintLink />
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingTransaction(t)}
+                                  className="p-1.5 rounded-md text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                  title="Editar transacción"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <DeleteButton
+                                  id={t.id}
+                                  confirmId={deleteConfirmId}
+                                  isDeleting={isDeleting}
+                                  onRequestDelete={(id) => setDeleteConfirmId(id)}
+                                  onConfirmDelete={handleConfirmDelete}
+                                  onCancelDelete={() => setDeleteConfirmId(null)}
+                                />
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
 
-                    {/* Bottom bar */}
-                    <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100">
-                      <TypeBadge type={t.type} />
-                      <div className="flex items-center gap-0.5">
-                        <button
-                          onClick={() => setEditingTransaction(t)}
-                          className="p-1.5 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                          title="Editar"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <DeleteButton
-                          id={t.id}
-                          confirmId={deleteConfirmId}
-                          isDeleting={isDeleting}
-                          onRequestDelete={(id) => setDeleteConfirmId(id)}
-                          onConfirmDelete={handleConfirmDelete}
-                          onCancelDelete={() => setDeleteConfirmId(null)}
-                        />
-                      </div>
-                    </div>
+            {listTotals !== null && total > 0 && (
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    <span className="font-medium">Totales</span>
+                    <span className="text-xs text-gray-500 ml-2">
+                      {total} {total === 1 ? "movimiento" : "movimientos"} con el filtro actual
+                    </span>
+                    {cuentaSaldoResumen && (
+                      <span className="block mt-1 text-sm font-semibold text-indigo-700 tabular-nums">
+                        {cuentaSaldoResumen.label}: {formatCurrency(cuentaSaldoResumen.amount)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4 text-sm tabular-nums">
+                    <span>
+                      <span className="text-gray-500">Ingresos </span>
+                      <span className="font-semibold text-green-600">+{formatCurrency(listTotals.totalIncome)}</span>
+                    </span>
+                    <span>
+                      <span className="text-gray-500">Gastos </span>
+                      <span className="font-semibold text-red-600">-{formatCurrency(listTotals.totalExpenses)}</span>
+                    </span>
+                    <span>
+                      <span className="text-gray-500">Neto </span>
+                      <span className={`font-bold ${listTotals.net >= 0 ? "text-indigo-600" : "text-red-600"}`}>
+                        {listTotals.net >= 0 ? "+" : "-"}${Math.abs(listTotals.net).toFixed(2)}
+                      </span>
+                    </span>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            )}
+          </div>
+
+          {/* Mobile cards grouped by date */}
+          <div className="sm:hidden space-y-4">
+            {groupedByDate.map((group) => (
+              <div key={group.dateKey}>
+                <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-gray-900 rounded-lg">
+                  <CalendarDays className="w-4 h-4 text-gray-300" />
+                  <h3 className="text-sm font-semibold text-white">{group.label}</h3>
+                </div>
+                <div className="space-y-2">
+                  {group.items.map((t) => (
+                    <div
+                      key={t.id}
+                      className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                    >
+                      <div className="flex items-start justify-between px-3 pt-3 pb-2">
+                        <div className="flex-1 min-w-0 pr-2">
+                          <p className="text-sm font-semibold text-gray-900 truncate">
+                            {t.description ?? (
+                              <span className="text-gray-400 italic font-normal">Sin descripción</span>
+                            )}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <CategoryBadge name={t.category.name} color={t.category.color} />
+                            <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                              <Wallet className="w-3 h-3" />
+                              {t.account.name}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0 text-right">
+                          <p className={`text-sm font-bold ${t.type === "INCOME" ? "text-green-600" : "text-red-600"}`}>
+                            {t.type === "INCOME" ? "+" : "-"}{formatCurrency(Math.abs(t.amount))}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100">
+                        <TypeBadge type={t.type} />
+                        <div className="flex items-center gap-0.5">
+                          <button
+                            onClick={() => setEditingTransaction(t)}
+                            className="p-1.5 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <DeleteButton
+                            id={t.id}
+                            confirmId={deleteConfirmId}
+                            isDeleting={isDeleting}
+                            onRequestDelete={(id) => setDeleteConfirmId(id)}
+                            onConfirmDelete={handleConfirmDelete}
+                            onCancelDelete={() => setDeleteConfirmId(null)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
 
           {listTotals !== null && total > 0 && (
-            <div className="sm:hidden bg-gray-50 rounded-xl border border-gray-200 p-4 space-y-2">
+            <div className="sm:hidden bg-gray-50 rounded-xl border border-gray-200 p-4 my-4">
               <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Totales</p>
               <p className="text-xs text-gray-500">
                 {total} {total === 1 ? "movimiento" : "movimientos"} con el filtro (todas las páginas).
@@ -852,8 +822,8 @@ export default function TransactionList() {
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
+          {/* Pagination - only when filtering beyond a single day */}
+          {totalPages > 1 && dateFromParam !== dateToParam && (
             <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 px-4 py-3 shadow-sm">
               <p className="text-sm text-gray-500">
                 Mostrando{" "}
