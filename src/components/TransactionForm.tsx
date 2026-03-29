@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
 import { useCurrency } from "@/context/CurrencyContext";
 
@@ -38,6 +39,7 @@ const defaultForm = (): FormState => ({
 
 export default function TransactionForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const { formatCurrency } = useCurrency();
+  const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<FormState>(defaultForm());
   const [categories, setCategories] = useState<Category[]>([]);
@@ -93,6 +95,8 @@ export default function TransactionForm({ onSuccess }: { onSuccess?: () => void 
 
       toast.success({ title: "Transacción guardada exitosamente" });
       setForm(defaultForm());
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
       onSuccess?.();
     } catch {
       toast.error({ title: "Error de red al guardar la transacción" });
