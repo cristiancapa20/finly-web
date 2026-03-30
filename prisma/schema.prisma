@@ -21,6 +21,7 @@ model User {
   transactions        Transaction[]
   loans               Loan[]
   passwordResetTokens PasswordResetToken[]
+  subscriptions       Subscription[]
 }
 
 model PasswordResetToken {
@@ -72,7 +73,8 @@ model Category {
   isSystem     Boolean       @default(false)
   userId       String?
   user         User?         @relation(fields: [userId], references: [id])
-  transactions Transaction[]
+  transactions  Transaction[]
+  subscriptions Subscription[]
 }
 
 model Account {
@@ -86,6 +88,7 @@ model Account {
   transactions   Transaction[]
   loans          Loan[]
   loanPayments   LoanPayment[]
+  subscriptions  Subscription[]
 }
 
 model Transaction {
@@ -103,4 +106,20 @@ model Transaction {
   category    Category @relation(fields: [categoryId], references: [id])
   account     Account  @relation(fields: [accountId], references: [id])
   user        User     @relation(fields: [userId], references: [id])
+}
+
+model Subscription {
+  id         String    @id @default(cuid())
+  name       String
+  amount     Int       // monto en centavos
+  dayOfMonth Int       // 1-31
+  categoryId String?
+  accountId  String
+  isActive   Boolean   @default(true)
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  category   Category? @relation(fields: [categoryId], references: [id])
+  account    Account   @relation(fields: [accountId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }

@@ -705,35 +705,35 @@ function LoanCard({
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2 flex-wrap pt-1">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 pt-1">
             {loan.status !== "PAID" && (
               <button
                 onClick={() => setShowAddPayment(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors"
+                className="flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors"
               >
-                <Plus className="w-3.5 h-3.5 text-indigo-600" />
-                {isLent ? "Me pagaron" : "Registrar pago"}
+                <Plus className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                <span className="truncate">{isLent ? "Me pagaron" : "Registrar pago"}</span>
               </button>
             )}
             <button
               onClick={toggleStatus}
               disabled={toggling}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 ${loan.status === "PAID" ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200" : "bg-green-50 text-green-700 hover:bg-green-100 border-green-200"}`}
+              className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 ${loan.status === "PAID" ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200" : "bg-green-50 text-green-700 hover:bg-green-100 border-green-200"}`}
             >
-              {loan.status === "PAID" ? <RotateCcw className="w-3.5 h-3.5 text-amber-600" /> : <CheckCircle className="w-3.5 h-3.5 text-green-600" />}
-              {loan.status === "PAID" ? "Reactivar" : "Marcar pagado"}
+              {loan.status === "PAID" ? <RotateCcw className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" /> : <CheckCircle className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />}
+              <span className="truncate">{loan.status === "PAID" ? "Reactivar" : "Marcar pagado"}</span>
             </button>
             {loan.payments.length > 0 && (
               <button
                 onClick={() => setShowPayments(v => !v)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors"
+                className="flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors"
               >
-                {showPayments ? <ChevronUp className="w-3.5 h-3.5 text-gray-500" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-500" />}
+                {showPayments ? <ChevronUp className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />}
                 {loan.payments.length} pago{loan.payments.length !== 1 ? "s" : ""}
               </button>
             )}
             {confirmingDelete ? (
-              <div className="ml-auto flex items-center gap-1">
+              <div className="flex items-center justify-center gap-1">
                 <button
                   onClick={handleDelete}
                   disabled={deleting}
@@ -751,9 +751,9 @@ function LoanCard({
             ) : (
               <button
                 onClick={() => setConfirmingDelete(true)}
-                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors"
+                className="flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors"
               >
-                <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                <Trash2 className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
                 Eliminar
               </button>
             )}

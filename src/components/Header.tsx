@@ -37,7 +37,7 @@ const navLinks = [
   { href: "/dashboard",    label: "Dashboard",         icon: LayoutDashboard },
   { href: "/transactions", label: "Nueva transacción", icon: PlusCircle },
   { href: "/historial",    label: "Transacciones",      icon: ArrowLeftRight },
-  { href: "/loans",        label: "Préstamos",          icon: HandCoins },
+  { href: "/loans",        label: "Compromisos",        icon: HandCoins },
   { href: "/cuentas",      label: "Cuentas",             icon: Wallet },
   { href: "/help",         label: "Guía de uso",        icon: HelpCircle },
 ];
