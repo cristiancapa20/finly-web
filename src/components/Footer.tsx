@@ -11,11 +11,11 @@ const socialLinks = [
 ];
 
 const services = [
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/dashboard", label: "Inicio" },
   { href: "/transactions", label: "Nueva transacción" },
-  { href: "/historial", label: "Transacciones" },
-  { href: "/loans", label: "Préstamos" },
-  { href: "/cuentas", label: "Cuentas" },
+  { href: "/history", label: "Transacciones" },
+  { href: "/commitments", label: "Compromisos" },
+  { href: "/accounts", label: "Cuentas" },
   { href: "/help", label: "Ayuda" },
 ];
 

@@ -94,7 +94,7 @@ const sections: Section[] = [
       { text: "Haz clic en el ícono de lápiz ✏️ para editar una transacción existente." },
       { text: 'Haz clic en el ícono de basurero 🗑️ para eliminar una transacción (te pedirá confirmación).', tip: "Puedes exportar todas las transacciones filtradas a CSV haciendo clic en \"Exportar CSV\"." },
     ],
-    link: { href: "/historial", label: "Ir al Historial" },
+    link: { href: "/history", label: "Ir al Historial" },
   },
   {
     id: "dashboard",

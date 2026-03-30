@@ -77,7 +77,7 @@ function TypeBadge({ type }: { type: string }) {
 function LoansManagedHintLink({ className = "" }: { className?: string }) {
   return (
     <Link
-      href="/loans"
+      href="/commitments"
       className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50 hover:text-indigo-800 transition-colors ${className}`}
       title="Este movimiento viene de un préstamo o pago: cambialo desde Préstamos"
     >

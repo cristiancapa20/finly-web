@@ -14,9 +14,9 @@ import { useSession } from "next-auth/react";
 
 const tabs = [
   { href: "/dashboard", label: "Inicio",    icon: LayoutDashboard },
-  { href: "/historial", label: "Transacciones", icon: ArrowLeftRight },
-  { href: "/loans",     label: "Compromisos", icon: HandCoins },
-  { href: "/cuentas",   label: "Cuentas",   icon: Wallet },
+  { href: "/history", label: "Transacciones", icon: ArrowLeftRight },
+  { href: "/commitments",     label: "Compromisos", icon: HandCoins },
+  { href: "/accounts",   label: "Cuentas",   icon: Wallet },
   { href: "/profile",   label: "Perfil",    icon: User },
 ];
 
