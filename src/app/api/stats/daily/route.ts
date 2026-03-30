@@ -19,10 +19,8 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = request.nextUrl;
-  const monthsParam = parseInt(searchParams.get("months") ?? "6", 10);
-  const months = isNaN(monthsParam) || monthsParam < 1 ? 6 : monthsParam;
-  const accountId = searchParams.get("accountId") ?? undefined;
   const monthParam = searchParams.get("month"); // e.g. "2026-03"
+  const accountId = searchParams.get("accountId") ?? undefined;
 
   let refYear: number, refMonth: number;
   if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
@@ -35,8 +33,9 @@ export async function GET(request: NextRequest) {
     refMonth = now.getMonth();
   }
 
-  const startDate = new Date(refYear, refMonth - months + 1, 1);
+  const startDate = new Date(refYear, refMonth, 1);
   const endDate = new Date(refYear, refMonth + 1, 1);
+  const daysInMonth = new Date(refYear, refMonth + 1, 0).getDate();
 
   const baseWhere: Prisma.TransactionWhereInput = {
     userId: session.user.id,
@@ -60,19 +59,17 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const monthMap = new Map<string, { income: number; expenses: number }>();
-
-  // Initialize all months with zero values
-  for (let i = 0; i < months; i++) {
-    const d = new Date(refYear, refMonth - months + 1 + i, 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    monthMap.set(key, { income: 0, expenses: 0 });
+  // Initialize all days
+  const dayMap = new Map<string, { income: number; expenses: number }>();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = `${refYear}-${String(refMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    dayMap.set(key, { income: 0, expenses: 0 });
   }
 
   for (const t of transactions) {
     const d = t.date;
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const entry = monthMap.get(key);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const entry = dayMap.get(key);
     if (!entry) continue;
     const amount = t.amount / 100;
     if (t.type === "INCOME") {
@@ -82,8 +79,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const data = Array.from(monthMap.entries()).map(([month, { income, expenses }]) => ({
-    month,
+  const data = Array.from(dayMap.entries()).map(([day, { income, expenses }]) => ({
+    day,
     income: Math.round(income * 100) / 100,
     expenses: Math.round(expenses * 100) / 100,
   }));
