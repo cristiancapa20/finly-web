@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCurrency } from "@/context/CurrencyContext";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "@/lib/toast";
-import { Plus, X, Trash2, Pencil, Repeat, Pause, Play } from "lucide-react";
+import { Plus, X, Trash2, Pencil, Repeat, Pause, Play, Clock } from "lucide-react";
 
 interface SubCategory {
   id: string;
@@ -364,6 +364,40 @@ function SubscriptionCard({
             {formatCurrency(sub.amount)}
           </span>
         </div>
+
+        {/* Next charge badge — only shows 3 days before */}
+        {sub.isActive && (() => {
+          const now = new Date();
+          const todayDay = now.getDate();
+          const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+          const effectiveDay = sub.dayOfMonth > lastDay ? lastDay : sub.dayOfMonth;
+          const isToday = todayDay === effectiveDay;
+          const daysUntil = effectiveDay > todayDay
+            ? effectiveDay - todayDay
+            : lastDay - todayDay + effectiveDay;
+
+          if (daysUntil > 3 && !isToday) return null;
+
+          return (
+            <div className={`flex flex-col gap-1 px-2.5 py-2 rounded-lg text-xs border ${
+              isToday
+                ? "bg-amber-50 text-amber-700 border-amber-200"
+                : "bg-blue-50 text-blue-700 border-blue-200"
+            }`}>
+              <div className="flex items-center gap-1.5 font-medium">
+                <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                {isToday
+                  ? "Se descuenta hoy a las 7:00 PM"
+                  : daysUntil === 1
+                    ? "Se descuenta mañana a las 7:00 PM"
+                    : `Se descuenta en ${daysUntil} días`}
+              </div>
+              <p className={`text-[11px] ${isToday ? "text-amber-600" : "text-blue-600"}`}>
+                No realices esta transferencia manualmente, el cobro es automático.
+              </p>
+            </div>
+          );
+        })()}
 
         {/* Meta */}
         <div className="flex flex-wrap gap-2 text-xs">

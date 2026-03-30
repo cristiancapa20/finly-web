@@ -11,13 +11,16 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const today = new Date();
-    const dayOfMonth = today.getDate();
+    // Use Ecuador timezone (UTC-5) to determine the current date
+    const nowUtc = new Date();
+    const ecuadorOffset = -5 * 60 * 60 * 1000;
+    const nowEcuador = new Date(nowUtc.getTime() + ecuadorOffset);
+    const dayOfMonth = nowEcuador.getUTCDate();
     const lastDayOfMonth = new Date(
-      today.getFullYear(),
-      today.getMonth() + 1,
+      nowEcuador.getUTCFullYear(),
+      nowEcuador.getUTCMonth() + 1,
       0
-    ).getDate();
+    ).getUTCDate();
 
     // Find active subscriptions due today.
     // If today is the last day of the month, also process subscriptions
@@ -41,10 +44,9 @@ export async function GET(req: NextRequest) {
     });
 
     let created = 0;
+    // Store with T12:00:00 to match how normal transactions are stored
     const dateOnly = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
+      `${nowEcuador.getUTCFullYear()}-${String(nowEcuador.getUTCMonth() + 1).padStart(2, "0")}-${String(nowEcuador.getUTCDate()).padStart(2, "0")}T12:00:00`
     );
 
     for (const sub of subscriptions) {

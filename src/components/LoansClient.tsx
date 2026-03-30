@@ -44,13 +44,17 @@ const fmtDate = (s: string | null) => {
   return new Date(s).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
 };
 
-const today = () => new Date().toISOString().split("T")[0];
+const today = () => {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+};
 
 /** Fecha del API (ISO) → valor para input type="date" */
 function dateInputFromApi(iso: string) {
   if (iso.length >= 10) return iso.slice(0, 10);
   const d = new Date(iso);
-  return isNaN(d.getTime()) ? today() : d.toISOString().split("T")[0];
+  if (isNaN(d.getTime())) return today();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function dueDateStatus(dueDate: string | null, status: string) {

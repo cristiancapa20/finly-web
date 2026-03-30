@@ -277,7 +277,8 @@ export default function TransactionList() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const today = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const typeParam = searchParams.get("type") ?? "";
   const categoryIdParam = searchParams.get("categoryId") ?? "";
   const accountIdParam = searchParams.get("accountId") ?? "";

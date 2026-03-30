@@ -26,7 +26,10 @@ interface FormState {
   date: string;
 }
 
-const getToday = () => new Date().toISOString().split("T")[0];
+const getToday = () => {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+};
 
 const defaultForm = (): FormState => ({
   amount: "",
