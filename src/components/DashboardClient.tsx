@@ -123,6 +123,7 @@ interface Subscription {
   amount: number;
   dayOfMonth: number;
   isActive: boolean;
+  accountId: string;
   account: { name: string };
 }
 
@@ -170,7 +171,9 @@ export default function DashboardClient() {
     queryFn: () => fetch("/api/subscriptions").then((r) => r.json()),
   });
   const subscriptions = subsRaw?.data ?? [];
-  const activeSubs = subscriptions.filter((s) => s.isActive);
+  const activeSubs = subscriptions
+    .filter((s) => s.isActive)
+    .filter((s) => !selectedAccountId || s.accountId === selectedAccountId);
   const totalSubsMonthly = activeSubs.reduce((sum, s) => sum + s.amount, 0);
   const upcomingSubs = activeSubs
     .map((s) => ({ ...s, ...getSubscriptionDaysUntil(s.dayOfMonth) }))
