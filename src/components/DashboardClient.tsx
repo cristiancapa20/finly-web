@@ -144,10 +144,6 @@ function formatMonthLabel(yyyyMm: string) {
   return date.toLocaleDateString("es-MX", { month: "short", year: "numeric" });
 }
 
-function formatDayLabel(yyyyMmDd: string) {
-  const [, , d] = yyyyMmDd.split("-").map(Number);
-  return String(d);
-}
 
 function getMonthString(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -251,40 +247,8 @@ export default function DashboardClient() {
   const balanceEvolution = useMemo<BalanceDayPoint[]>(() => {
     if (!dailyData.length || !accounts.length) return [];
 
-    // Sumar flujo neto de todos los días del mes seleccionado
-    const monthNet = dailyData.reduce((s, d) => s + d.income - d.expenses, 0);
-
-    // Si estamos viendo el mes actual, el saldo al final es el saldo real.
-    // Si es un mes pasado, reconstruimos: saldo al inicio del mes siguiente =
-    // saldo actual - flujo neto de todos los meses después del seleccionado.
-    // Pero como solo tenemos datos del mes seleccionado, usamos:
-    // saldo al final del mes = saldoInicio + monthNet
-    // saldoInicio = saldoFinal - monthNet
-    // Para el mes actual, saldoFinal = saldoEnCuentas.
-    // Para meses pasados, necesitamos descontar los meses intermedios.
-
-    const [selY, selM] = selectedMonth.split("-").map(Number);
-    const now = new Date();
-    const currentMonth = getMonthString(now);
-
-    let endOfMonthBalance = saldoEnCuentas;
-
-    if (selectedMonth !== currentMonth) {
-      // Necesitamos restar el flujo neto de los meses entre selectedMonth+1 y now
-      // Usamos monthStats del mes actual? No, no tenemos esos datos aquí.
-      // Alternativa: calcular el saldo al inicio del mes como saldoFinal - monthNet
-      // donde saldoFinal se aproxima restando los flujos futuros.
-      // Como no tenemos datos de meses intermedios, usamos el approach:
-      // balance al final del mes = saldoEnCuentas - (sum of net flows from selectedMonth+1 to now)
-      // Sin esos datos, simplificamos: mostramos evolución relativa dentro del mes.
-      // saldoInicio = saldoEnCuentas (aproximación para meses pasados basada en cuentas)
-      // Esto no será 100% exacto para meses pasados lejanos, pero muestra la forma correcta.
-      endOfMonthBalance = saldoEnCuentas;
-    }
-
-    // Reconstruir hacia atrás: el último día tiene endOfMonthBalance
     const result: BalanceDayPoint[] = [];
-    let balance = endOfMonthBalance;
+    let balance = saldoEnCuentas;
 
     for (let i = dailyData.length - 1; i >= 0; i--) {
       const d = dailyData[i];
