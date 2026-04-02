@@ -41,7 +41,7 @@ const defaultFormatBalance = (amount: number) =>
  * @property {AccountFilterChipItem[]} accounts - Lista de cuentas a mostrar
  * @property {string} selectedAccountId - ID de la cuenta seleccionada actualmente (vacío = todas)
  * @property {(id: string) => void} onSelectAccountId - Callback cuando se selecciona una cuenta
- * @property {string} [allLabel=”Todas”] - Etiqueta del chip “todas las cuentas”
+ * @property {string} [allLabel="Todas"] - Etiqueta del chip "todas las cuentas"
  * @property {(amount: number) => string} [formatBalance] - Función para formatear el saldo
  * @property {string} [className] - Clases CSS adicionales
  */
@@ -49,7 +49,7 @@ export type AccountFilterChipsProps = {
   accounts: AccountFilterChipItem[];
   selectedAccountId: string;
   onSelectAccountId: (id: string) => void;
-  /** Etiqueta del chip “todas las cuentas” */
+  /** Etiqueta del chip "todas las cuentas" */
   allLabel?: string;
   formatBalance?: (amount: number) => string;
   className?: string;
@@ -62,8 +62,8 @@ export type AccountFilterChipsProps = {
  * @returns {React.ReactElement|null} El componente renderizado, o null si no hay cuentas
  * @example
  * <AccountFilterChips
- *   accounts={[{ id: “1”, name: “Mi Cuenta”, balance: 1000 }]}
- *   selectedAccountId=””
+ *   accounts={[{ id: "1", name: "Mi Cuenta", balance: 1000 }]}
+ *   selectedAccountId=""
  *   onSelectAccountId={(id) => setSelected(id)}
  * />
  */
@@ -71,9 +71,9 @@ export function AccountFilterChips({
   accounts,
   selectedAccountId,
   onSelectAccountId,
-  allLabel = “Todas”,
+  allLabel = "Todas",
   formatBalance = defaultFormatBalance,
-  className = “”,
+  className = "",
 }: AccountFilterChipsProps) {
   if (accounts.length === 0) return null;
 
