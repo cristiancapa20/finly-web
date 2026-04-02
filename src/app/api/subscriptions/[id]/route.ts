@@ -1,3 +1,8 @@
+/**
+ * @module api/subscriptions/[id]
+ * Manejador para actualizar y eliminar suscripciones individuales. Permite modificar detalles de la suscripción o desactivarla completamente.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
@@ -7,6 +12,16 @@ import { prisma } from "@/lib/prisma";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const db = prisma as any;
 
+/**
+ * PATCH /api/subscriptions/[id]
+ * Actualiza los detalles de una suscripción existente (nombre, monto, día del mes, estado activo, cuenta, categoría).
+ * @param {NextRequest} req - Solicitud HTTP con body: { name?, amount?, dayOfMonth?, isActive?, accountId?, categoryId? }
+ * @param {Object} params - Parámetros de ruta incluyendo el ID de la suscripción
+ * @returns {Object} Suscripción actualizada con monto convertido a formato decimal
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {404} Si la suscripción no existe
+ * @throws {400} Si los datos de entrada son inválidos
+ */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
@@ -83,6 +98,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
+/**
+ * DELETE /api/subscriptions/[id]
+ * Elimina una suscripción existente.
+ * @param {NextRequest} _req - Solicitud HTTP (no se utiliza)
+ * @param {Object} params - Parámetros de ruta incluyendo el ID de la suscripción
+ * @returns {Object} { success: true } si la eliminación fue exitosa
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {404} Si la suscripción no existe
+ */
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);

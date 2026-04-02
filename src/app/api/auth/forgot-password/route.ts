@@ -1,3 +1,8 @@
+/**
+ * @module api/auth/forgot-password
+ * Manejador para solicitudes de restablecimiento de contraseña. Envía un correo con un enlace de restablecimiento si el usuario existe. Implementa rate limiting por IP y correo.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createHash, randomBytes } from "crypto";
 import { Resend } from "resend";
@@ -8,6 +13,12 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FORGOT_PASSWORD_LIMIT = { limit: 5, windowMs: 15 * 60 * 1000 };
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "no-reply@finlycr.com";
 
+/**
+ * POST /api/auth/forgot-password
+ * Inicia el proceso de restablecimiento de contraseña. Busca el usuario por correo, genera un token con hash SHA256 válido por 5 minutos y envía un correo con el enlace de restablecimiento. Responde siempre con { ok: true } para evitar filtrar información de usuarios existentes.
+ * @param {NextRequest} request - Solicitud HTTP con body: { email }
+ * @returns {Object} Siempre { ok: true } (HTTP 200) por seguridad, incluso si el correo no existe o se agotó el rate limit
+ */
 export async function POST(request: NextRequest) {
   const { email } = await request.json();
 

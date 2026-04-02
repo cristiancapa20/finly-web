@@ -1,9 +1,22 @@
+/**
+ * @module api/cron/subscriptions
+ * Manejador de cron job para procesar suscripciones activas. Crea transacciones automáticas en las fechas especificadas de suscripción. Se ejecuta con autenticación por token de secreto.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const db = prisma as any;
 
+/**
+ * GET /api/cron/subscriptions
+ * Procesa todas las suscripciones activas cuya fecha de vencimiento es hoy. Crea una transacción por cada suscripción y previene duplicados. Usa zona horaria de Ecuador (UTC-5).
+ * @param {NextRequest} req - Solicitud HTTP con header Authorization: Bearer {CRON_SECRET}
+ * @returns {Object} { processed: number } - Cantidad de suscripciones procesadas
+ * @throws {401} Si el token de autorización (CRON_SECRET) es inválido
+ * @throws {500} Error interno del servidor
+ */
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {

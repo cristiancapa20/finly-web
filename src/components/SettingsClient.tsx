@@ -1,3 +1,8 @@
+/**
+ * @module SettingsClient
+ * Panel de configuración de cuentas y categorías personalizadas.
+ */
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -8,8 +13,22 @@ import { getCategoryIcon } from "@/lib/categoryIcons";
 import type { LucideIcon } from "lucide-react";
 import { useCurrency } from "@/context/CurrencyContext";
 
+/**
+ * Tipo de cuenta bancaria
+ * @typedef {"CASH" | "BANK" | "CREDIT_CARD" | "OTHER"} AccountType
+ */
 type AccountType = "CASH" | "BANK" | "CREDIT_CARD" | "OTHER";
 
+/**
+ * Representa una cuenta bancaria o de efectivo
+ * @typedef {Object} Account
+ * @property {string} id - ID único de la cuenta
+ * @property {string} name - Nombre de la cuenta
+ * @property {AccountType} type - Tipo de cuenta (CASH, BANK, etc)
+ * @property {string} [color] - Color hexadecimal para la visualización
+ * @property {number} [balance] - Saldo actual de la cuenta
+ * @property {number} [initialBalance] - Saldo inicial registrado
+ */
 interface Account {
   id: string;
   name: string;
@@ -19,6 +38,16 @@ interface Account {
   initialBalance?: number;
 }
 
+/**
+ * Representa una categoría de transacción
+ * @typedef {Object} Category
+ * @property {string} id - ID único de la categoría
+ * @property {string} name - Nombre de la categoría
+ * @property {string} color - Color hexadecimal para la visualización
+ * @property {boolean} isSystem - True si es una categoría del sistema
+ * @property {Object} [_count] - Metadatos de conteo
+ * @property {number} [_count.transactions] - Número de transacciones en esta categoría
+ */
 interface Category {
   id: string;
   name: string;
@@ -52,6 +81,14 @@ const PRESET_COLORS = [
   "#FD79A8", "#00B894", "#E17055", "#0984E3", "#FDCB6E",
 ];
 
+/**
+ * Componente principal de configuración que permite:
+ * - Crear, editar y eliminar cuentas
+ * - Crear, editar y eliminar categorías personalizadas
+ * - Ver estadísticas de categorías
+ * - Actualizar saldos de cuentas
+ * @returns {React.ReactElement} Panel de configuración completo
+ */
 export default function SettingsClient() {
   const { formatCurrency } = useCurrency();
 

@@ -1,3 +1,8 @@
+/**
+ * @module api/transactions/export
+ * Manejador para exportar transacciones a formato CSV con filtros opcionales. Genera archivos con codificación UTF-8 BOM para compatibilidad con Excel.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
@@ -22,6 +27,14 @@ const exportSelect = {
 
 type ExportTransactionRow = Prisma.TransactionGetPayload<{ select: typeof exportSelect }>;
 
+/**
+ * GET /api/transactions/export
+ * Exporta transacciones a CSV con filtros opcionales por tipo, categoría, rango de fechas. Retorna archivo descargable con columnas: Fecha, Descripción, Categoría, Cuenta, Tipo, Monto.
+ * @param {NextRequest} request - Solicitud HTTP con query params: ?type=INCOME|EXPENSE&categoryId=id&dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD
+ * @returns {Response} Archivo CSV con Content-Type text/csv y header Content-Disposition attachment
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {500} Error interno del servidor
+ */
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

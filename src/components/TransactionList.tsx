@@ -1,3 +1,8 @@
+/**
+ * @module TransactionList
+ * Listado paginado de transacciones con filtrado por cuenta.
+ */
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -25,6 +30,12 @@ import {
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import { AccountFilterChips, type AccountFilterChipItem } from "@/components/AccountFilterChips";
 
+/**
+ * Representa una categoría de transacción
+ * @typedef {Object} Category
+ * @property {string} id - ID único de la categoría
+ * @property {string} name - Nombre de la categoría
+ */
 interface Category {
   id: string;
   name: string;

@@ -1,3 +1,9 @@
+/**
+ * @module DashboardClient
+ * Panel principal de control financiero con estadísticas, gráficos
+ * y resumen de suscripciones próximas.
+ */
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -18,6 +24,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { AccountFilterChips, type AccountFilterChipItem } from "@/components/AccountFilterChips";
+
+/**
+ * Props para el componente de leyenda de gráfico
+ * @typedef {Object} ChartLegendProps
+ * @property {Array<{value: string, color: string}>} [payload] - Items de la leyenda
+ */
 interface ChartLegendProps {
   payload?: { value: string; color: string }[];
 }
@@ -156,6 +168,14 @@ function addMonths(yyyyMm: string, delta: number) {
   return getMonthString(d);
 }
 
+/**
+ * Componente principal del dashboard que muestra:
+ * - Resumen de finanzas (saldo, ingresos, gastos, suscripciones)
+ * - Gráficos de gastos por categoría, ingresos vs gastos y evolución del saldo
+ * - Filtrado por cuenta y mes
+ * - Próximas suscripciones vencidas
+ * @returns {React.ReactElement} Panel de control completamente renderizado
+ */
 export default function DashboardClient() {
   const { formatCurrency } = useCurrency();
   const [selectedMonth, setSelectedMonth] = useState(getMonthString(new Date()));

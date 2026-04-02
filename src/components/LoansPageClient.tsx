@@ -1,3 +1,8 @@
+/**
+ * @module LoansPageClient
+ * Página que agrupa préstamos/deudas y suscripciones con selector de sección.
+ */
+
 "use client";
 
 import { useState } from "react";
@@ -5,8 +10,17 @@ import { HandCoins, Repeat } from "lucide-react";
 import LoansClient from "./LoansClient";
 import SubscriptionsClient from "./SubscriptionsClient";
 
+/**
+ * Tipo para las secciones disponibles
+ * @typedef {"loans" | "subscriptions"} Section
+ */
 type Section = "loans" | "subscriptions";
 
+/**
+ * Componente que gestiona dos secciones: Préstamos y Suscripciones.
+ * Proporciona un selector de pestañas para navegar entre ambas.
+ * @returns {React.ReactElement} La página con selector de secciones
+ */
 export default function LoansPageClient() {
   const [section, setSection] = useState<Section>("loans");
 

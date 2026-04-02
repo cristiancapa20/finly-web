@@ -1,8 +1,23 @@
+/**
+ * @module api/categories/[id]
+ * Manejador para operaciones de eliminación en categorías individuales. Solo permite eliminar categorías personalizadas (no del sistema) que no tienen transacciones asociadas.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * DELETE /api/categories/[id]
+ * Elimina una categoría personalizada existente. No se pueden eliminar categorías del sistema ni categorías que tienen transacciones asociadas.
+ * @param {NextRequest} _req - Solicitud HTTP (no se utiliza)
+ * @param {Object} params - Parámetros de ruta incluyendo el ID de la categoría
+ * @returns {Object} { success: true } si la eliminación fue exitosa
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {404} Si la categoría no existe
+ * @throws {409} Si la categoría es del sistema o tiene transacciones asociadas
+ */
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

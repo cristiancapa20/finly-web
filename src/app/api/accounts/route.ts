@@ -1,3 +1,8 @@
+/**
+ * @module api/accounts
+ * Manejador para operaciones CRUD en cuentas. Permite listar todas las cuentas del usuario, crear nuevas cuentas y gestionar saldos totales.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
@@ -11,6 +16,13 @@ function missingSoftDeleteColumn(error: unknown) {
   );
 }
 
+/**
+ * GET /api/accounts
+ * Obtiene todas las cuentas del usuario autenticado con sus saldos totales (saldo inicial + suma de transacciones).
+ * @returns {Array} Array de cuentas con id, name, type, color, initialBalance y balance calculado
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {500} Error interno del servidor
+ */
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -66,6 +78,14 @@ export async function GET() {
   }
 }
 
+/**
+ * POST /api/accounts
+ * Crea una nueva cuenta para el usuario. Requiere nombre, tipo, saldo inicial. El color es opcional.
+ * @param {NextRequest} req - Solicitud HTTP con body: { name, type, color?, initialBalance }
+ * @returns {Object} Cuenta creada con id, name, type, color, initialBalance (HTTP 201)
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {400} Si faltan campos requeridos o el tipo de cuenta es inválido
+ */
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

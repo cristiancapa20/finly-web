@@ -1,3 +1,8 @@
+/**
+ * @module api/accounts/[id]
+ * Manejador para operaciones CRUD en cuentas individuales. Permite actualizar los detalles de una cuenta específica (nombre, color, saldo inicial) y eliminar cuentas que no tienen transacciones asociadas.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
@@ -33,6 +38,15 @@ async function findAccountForBalanceEdit(id: string, userId: string) {
   }
 }
 
+/**
+ * PATCH /api/accounts/[id]
+ * Actualiza los detalles de una cuenta existente (nombre, color, saldo inicial). Si se actualiza el saldo, se recalcula automáticamente el saldo inicial basándose en las transacciones existentes.
+ * @param {NextRequest} req - Solicitud HTTP con body: { name?, color?, balance? }
+ * @param {Object} params - Parámetros de ruta incluyendo el ID de la cuenta
+ * @returns {Object} Cuenta actualizada con id, name, type, color, initialBalance
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {404} Si la cuenta no existe para este usuario
+ */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -70,6 +84,16 @@ export async function PATCH(
   return NextResponse.json({ data: account });
 }
 
+/**
+ * DELETE /api/accounts/[id]
+ * Elimina una cuenta existente. Solo se puede eliminar si no tiene transacciones asociadas.
+ * @param {NextRequest} _req - Solicitud HTTP (no se utiliza)
+ * @param {Object} params - Parámetros de ruta incluyendo el ID de la cuenta
+ * @returns {Object} { success: true } si la eliminación fue exitosa
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {404} Si la cuenta no existe para este usuario
+ * @throws {409} Si la cuenta contiene transacciones asociadas (no puede ser eliminada)
+ */
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -1,3 +1,8 @@
+/**
+ * @module api/loans/[id]/payments
+ * Manejador para crear pagos de préstamos. Crea automáticamente una transacción de balance y marca el préstamo como PAID si se cubre completamente.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
@@ -11,6 +16,16 @@ const CATEGORY_PRESTAMO = "Préstamo";
 const CATEGORY_DEUDA = "Deuda";
 const CATEGORY_FALLBACK = "Otros";
 
+/**
+ * POST /api/loans/[id]/payments
+ * Registra un nuevo pago para un préstamo. Crea automáticamente una transacción de balance en la cuenta especificada y actualiza el estado del préstamo a PAID si se cubre completamente.
+ * @param {NextRequest} req - Solicitud HTTP con body: { amount, date, note?, accountId }
+ * @param {Object} params - Parámetros de ruta incluyendo el ID del préstamo
+ * @returns {Object} Pago creado con monto convertido a formato decimal, datos de cuenta (HTTP 201)
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {404} Si el préstamo no existe
+ * @throws {400} Si los datos requeridos son inválidos
+ */
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);

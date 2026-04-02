@@ -1,3 +1,8 @@
+/**
+ * @module api/stats/daily
+ * Manejador para estadísticas diarias de transacciones. Retorna ingresos y gastos agrupados por día de un mes específico.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
@@ -12,6 +17,13 @@ function missingSoftDeleteColumn(error: unknown) {
   );
 }
 
+/**
+ * GET /api/stats/daily
+ * Obtiene estadísticas diarias de ingresos y gastos para un mes específico o el mes actual. Retorna un array con todos los días del mes, incluyendo días sin transacciones con valores cero.
+ * @param {NextRequest} request - Solicitud HTTP con query params: ?month=YYYY-MM&accountId=id?
+ * @returns {Array} Array con entries { day: "YYYY-MM-DD", income: number, expenses: number }
+ * @throws {401} Si no hay sesión de usuario autenticada
+ */
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {

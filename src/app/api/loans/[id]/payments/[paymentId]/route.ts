@@ -1,3 +1,8 @@
+/**
+ * @module api/loans/[id]/payments/[paymentId]
+ * Manejador para actualizar y eliminar pagos de préstamos individuales. Mantiene sincronizada la transacción de balance asociada y actualiza automáticamente el estado del préstamo.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
@@ -8,6 +13,16 @@ import { prisma } from "@/lib/prisma";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = prisma as any;
 
+/**
+ * PATCH /api/loans/[id]/payments/[paymentId]
+ * Actualiza los detalles de un pago existente (monto, fecha, nota, cuenta). Sincroniza la transacción de balance y actualiza automáticamente el estado del préstamo (PAID/ACTIVE).
+ * @param {NextRequest} req - Solicitud HTTP con body: { amount, date, note?, accountId }
+ * @param {Object} params - Parámetros de ruta incluyendo loanId y paymentId
+ * @returns {Object} Pago actualizado con monto convertido a formato decimal y datos de cuenta
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {404} Si el préstamo o pago no existe
+ * @throws {400} Si los datos requeridos son inválidos
+ */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string; paymentId: string } }
@@ -105,6 +120,15 @@ export async function PATCH(
   }
 }
 
+/**
+ * DELETE /api/loans/[id]/payments/[paymentId]
+ * Elimina un pago y su transacción de balance asociada. Actualiza automáticamente el estado del préstamo si es necesario.
+ * @param {NextRequest} _req - Solicitud HTTP (no se utiliza)
+ * @param {Object} params - Parámetros de ruta incluyendo loanId y paymentId
+ * @returns {Object} { success: true } si la eliminación fue exitosa
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {404} Si el préstamo o pago no existe
+ */
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string; paymentId: string } }

@@ -1,6 +1,20 @@
+/**
+ * @module loanManagedTransaction
+ * Utilidades para identificar transacciones que fueron creadas automáticamente
+ * por el módulo de préstamos. Estas transacciones no deben ser editadas
+ * ni eliminadas directamente por el usuario desde la vista de transacciones.
+ */
+
 import { prisma } from "@/lib/prisma";
 
-/** Transacción enlazada al alta de un préstamo/deuda o a un pago registrado en Préstamos. */
+/**
+ * Obtiene los IDs de transacciones que están vinculadas a préstamos o pagos de préstamos.
+ * Consulta tanto la tabla `Loan` como `LoanPayment` para encontrar coincidencias.
+ *
+ * @param userId - ID del usuario propietario de los préstamos.
+ * @param transactionIds - Lista de IDs de transacciones a verificar.
+ * @returns Set con los IDs de transacciones que son gestionadas por el módulo de préstamos.
+ */
 export async function getLoanManagedTransactionIds(
   userId: string,
   transactionIds: string[]
@@ -31,6 +45,13 @@ export async function getLoanManagedTransactionIds(
   return out;
 }
 
+/**
+ * Verifica si una transacción individual fue creada por el módulo de préstamos.
+ *
+ * @param transactionId - ID de la transacción a verificar.
+ * @param userId - ID del usuario propietario.
+ * @returns `true` si la transacción es gestionada por préstamos.
+ */
 export async function isLoanManagedTransaction(
   transactionId: string,
   userId: string

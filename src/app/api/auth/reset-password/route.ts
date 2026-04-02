@@ -1,3 +1,8 @@
+/**
+ * @module api/auth/reset-password
+ * Manejador para el restablecimiento de contraseña con token. Valida el token, verifica que no haya expirado, actualiza la contraseña con bcrypt y elimina el token después del uso.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import bcrypt from "bcryptjs";
@@ -6,6 +11,14 @@ import { consumeRateLimit, getClientIpFromHeaders } from "@/lib/rateLimit";
 
 const RESET_PASSWORD_LIMIT = { limit: 10, windowMs: 15 * 60 * 1000 };
 
+/**
+ * POST /api/auth/reset-password
+ * Restablece la contraseña del usuario con un token válido. Valida que la contraseña tenga al menos 8 caracteres, verifica el token, aplica rate limiting y actualiza la contraseña con bcrypt.
+ * @param {NextRequest} request - Solicitud HTTP con body: { token, password }
+ * @returns {Object} { ok: true } si el restablecimiento fue exitoso (HTTP 200)
+ * @throws {400} Si el token es inválido, ha expirado o falta información requerida
+ * @throws {429} Si se agota el rate limit con header 'Retry-After'
+ */
 export async function POST(request: NextRequest) {
   const { token, password } = await request.json();
 

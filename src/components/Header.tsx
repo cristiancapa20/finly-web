@@ -1,3 +1,8 @@
+/**
+ * @module Header
+ * Encabezado con navegación lateral/superior y perfil de usuario.
+ */
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -11,6 +16,13 @@ import {
 import Image from "next/image";
 import { useIsPWA } from "@/hooks/useIsPWA";
 
+/**
+ * Componente que muestra el avatar del usuario con su inicial o imagen.
+ * @param {Object} props - Props del componente
+ * @param {string|null} [props.name] - Nombre del usuario
+ * @param {number} [props.size=8] - Tamaño del avatar en unidades Tailwind
+ * @returns {React.ReactElement} Avatar del usuario renderizado
+ */
 function UserAvatar({ name, size = 8 }: { name?: string | null; size?: number }) {
   const [avatar, setAvatar] = useState<string | null>(null);
 
@@ -42,6 +54,20 @@ const navLinks = [
   { href: "/help",         label: "Guía de uso",        icon: HelpCircle },
 ];
 
+/**
+ * Props para SidebarContent
+ * @typedef {Object} SidebarContentProps
+ * @property {string} pathname - Ruta actual de la página
+ * @property {() => void} [onClose] - Callback para cerrar el sidebar en móvil
+ * @property {Object} session - Sesión del usuario autenticado
+ */
+
+/**
+ * Contenido reutilizable del sidebar tanto para desktop como móvil.
+ * Incluye navegación, logo y opciones de perfil/logout.
+ * @param {SidebarContentProps} props - Props del componente
+ * @returns {React.ReactElement} El contenido del sidebar
+ */
 function SidebarContent({ pathname, onClose, session }: {
   pathname: string;
   onClose?: () => void;
@@ -120,6 +146,14 @@ function SidebarContent({ pathname, onClose, session }: {
   );
 }
 
+/**
+ * Componente principal del encabezado que gestiona:
+ * - Sidebar fijo en desktop
+ * - Barra superior en web móvil
+ * - Sidebar desplegable en móvil
+ * - Estados de autenticación y PWA
+ * @returns {React.ReactElement|null} El header renderizado o null si no hay sesión
+ */
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();

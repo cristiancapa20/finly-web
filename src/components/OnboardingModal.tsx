@@ -1,3 +1,8 @@
+/**
+ * @module OnboardingModal
+ * Modal de bienvenida para configuración inicial: moneda y primera cuenta.
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,6 +12,10 @@ import { toast } from "@/lib/toast";
 import { CURRENCIES } from "@/lib/currency";
 import { useQueryClient } from "@tanstack/react-query";
 
+/**
+ * Tipo de cuenta bancaria
+ * @typedef {"CASH" | "BANK" | "CREDIT_CARD" | "OTHER"} AccountType
+ */
 type AccountType = "CASH" | "BANK" | "CREDIT_CARD" | "OTHER";
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
@@ -21,6 +30,14 @@ const CARD_COLORS = [
   "#1d4ed8", "#065f46", "#831843", "#1e40af", "#374151",
 ];
 
+/**
+ * Modal de bienvenida con 3 pasos:
+ * 1. Seleccionar moneda principal
+ * 2. Crear primera cuenta
+ * 3. Establecer saldo inicial
+ * Se muestra automáticamente al primer login sin cuentas registradas.
+ * @returns {React.ReactElement|null} El modal o null si ya tiene cuentas
+ */
 export default function OnboardingModal() {
   const { status } = useSession();
   const queryClient = useQueryClient();

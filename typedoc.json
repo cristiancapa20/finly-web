@@ -1,0 +1,18 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/lib", "src/components", "src/hooks", "src/context", "src/types", "src/app/api"],
+  "entryPointStrategy": "expand",
+  "out": "docs",
+  "name": "FinlyCR - Documentación Técnica",
+  "readme": "none",
+  "exclude": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "node_modules/**"],
+  "excludeExternals": true,
+  "excludePrivate": false,
+  "excludeInternal": false,
+  "includeVersion": true,
+  "categorizeByGroup": true,
+  "sort": ["source-order"],
+  "plugin": [],
+  "tsconfig": "./tsconfig.typedoc.json",
+  "skipErrorChecking": true
+}

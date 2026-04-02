@@ -1,7 +1,21 @@
+/**
+ * @module api/register
+ * Manejador para registro de nuevos usuarios. Valida correo y contraseña, verifica duplicados y almacena con hash bcrypt.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * POST /api/register
+ * Registra un nuevo usuario en el sistema. Valida que el correo sea único, que la contraseña tenga al menos 8 caracteres y crea un nuevo usuario con hash de contraseña bcrypt.
+ * @param {NextRequest} req - Solicitud HTTP con body: { email, fullName?, password }
+ * @returns {Object} { success: true } si el registro fue exitoso (HTTP 201)
+ * @throws {400} Si faltan campos, el correo es inválido o la contraseña es muy corta
+ * @throws {409} Si el correo ya está registrado
+ * @throws {500} Error interno del servidor
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

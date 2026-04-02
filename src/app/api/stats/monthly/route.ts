@@ -1,3 +1,8 @@
+/**
+ * @module api/stats/monthly
+ * Manejador para estadísticas mensuales de transacciones. Retorna ingresos y gastos agrupados por mes en un rango temporal.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
@@ -12,6 +17,13 @@ function missingSoftDeleteColumn(error: unknown) {
   );
 }
 
+/**
+ * GET /api/stats/monthly
+ * Obtiene estadísticas mensuales de ingresos y gastos para los últimos N meses. Retorna un array con todos los meses en el rango solicitado, incluyendo meses sin transacciones.
+ * @param {NextRequest} request - Solicitud HTTP con query params: ?months=6&month=YYYY-MM&accountId=id?
+ * @returns {Array} Array con entries { month: "YYYY-MM", income: number, expenses: number }
+ * @throws {401} Si no hay sesión de usuario autenticada
+ */
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {

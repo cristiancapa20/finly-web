@@ -1,3 +1,8 @@
+/**
+ * @module QuickTransactionButton
+ * Botón flotante para crear transacciones rápidamente desde cualquier página.
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -5,38 +10,11 @@ import { usePathname } from "next/navigation";
 import { Plus, X } from "lucide-react";
 import TransactionForm from "@/components/TransactionForm";
 
-// Mic feature temporarily disabled
-// interface SpeechRecognitionAlternative { transcript: string }
-// interface SpeechRecognitionResult {
-//   readonly length: number;
-//   isFinal: boolean;
-//   [index: number]: SpeechRecognitionAlternative;
-// }
-// interface SpeechRecognitionResultList {
-//   readonly length: number;
-//   [index: number]: SpeechRecognitionResult;
-// }
-// interface SpeechRecognitionEvent extends Event {
-//   resultIndex: number;
-//   results: SpeechRecognitionResultList;
-// }
-// interface SpeechRecognitionInstance extends EventTarget {
-//   lang: string;
-//   continuous: boolean;
-//   interimResults: boolean;
-//   onresult: ((event: SpeechRecognitionEvent) => void) | null;
-//   onend: (() => void) | null;
-//   onerror: (() => void) | null;
-//   start(): void;
-//   stop(): void;
-// }
-// declare global {
-//   interface Window {
-//     SpeechRecognition?: new () => SpeechRecognitionInstance;
-//     webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
-//   }
-// }
-
+/**
+ * Botón de acción flotante (FAB) que abre un modal para registrar
+ * nuevas transacciones. Se cierra automáticamente al navegar.
+ * @returns {React.ReactElement} El botón flotante y su modal
+ */
 export default function QuickTransactionButton() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);

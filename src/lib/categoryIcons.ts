@@ -1,3 +1,10 @@
+/**
+ * @module categoryIcons
+ * Mapeo de categorías de transacción a íconos de Lucide React.
+ * Usa keywords en español para hacer match con nombres de categorías
+ * definidas por el usuario o el sistema.
+ */
+
 import {
   Utensils,
   Coffee,
@@ -17,6 +24,12 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+/**
+ * Mapeo interno de keywords a íconos. Cada entrada define un conjunto
+ * de palabras clave en español que, si aparecen en el nombre de la categoría,
+ * determinan el ícono a mostrar.
+ * @internal
+ */
 const categoryIconMap: { keywords: string[]; Icon: LucideIcon }[] = [
   { keywords: ["comida", "aliment", "restaur", "super", "mercado", "taco", "pizza"], Icon: Utensils },
   { keywords: ["café", "cafe", "coffee"], Icon: Coffee },
@@ -34,6 +47,18 @@ const categoryIconMap: { keywords: string[]; Icon: LucideIcon }[] = [
   { keywords: ["ahorro", "invers", "fondo"], Icon: PiggyBank },
 ];
 
+/**
+ * Retorna el ícono de Lucide React que mejor representa una categoría
+ * según su nombre. Busca coincidencias parciales con keywords en español.
+ *
+ * @param name - Nombre de la categoría (ej: `"Comida y restaurantes"`).
+ * @returns Componente de ícono Lucide. Retorna `Tag` como fallback si no hay match.
+ *
+ * @example
+ * getCategoryIcon("Comida rápida")  // → Utensils
+ * getCategoryIcon("Gym mensual")    // → Dumbbell
+ * getCategoryIcon("Algo random")    // → Tag (fallback)
+ */
 export function getCategoryIcon(name: string): LucideIcon {
   const lower = name.toLowerCase();
   for (const { keywords, Icon } of categoryIconMap) {

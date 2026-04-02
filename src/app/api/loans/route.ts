@@ -1,3 +1,8 @@
+/**
+ * @module api/loans
+ * Manejador para operaciones CRUD en préstamos. Permite listar, crear y gestionar préstamos (dinero owed/lent).
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
@@ -8,6 +13,13 @@ import { createLoanBalanceTransaction } from "@/lib/loanBalance";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const db = prisma as any;
 
+/**
+ * GET /api/loans
+ * Obtiene todos los préstamos del usuario con su información de pagos e historial. Calcula automáticamente los saldos pendientes.
+ * @returns {Array} Array de préstamos con montos convertidos a formato decimal, información de pagos y saldos
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {500} Error interno del servidor
+ */
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -54,6 +66,15 @@ export async function GET() {
   }
 }
 
+/**
+ * POST /api/loans
+ * Crea un nuevo préstamo. Automáticamente crea una transacción de balance en la categoría apropiada. Requiere tipo (LENT/OWED), contacto, monto y cuenta.
+ * @param {NextRequest} req - Solicitud HTTP con body: { type, contactName, amount, description?, dueDate?, reminderDays?, accountId }
+ * @returns {Object} Préstamo creado con monto convertido, saldo pendiente, información de pagos y cuenta (HTTP 201)
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {400} Si los datos requeridos son inválidos o la cuenta no existe
+ * @throws {500} Error interno del servidor
+ */
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

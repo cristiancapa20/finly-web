@@ -1,3 +1,8 @@
+/**
+ * @module UsageGuideModal
+ * Modal con guía de uso interactiva de la aplicación.
+ */
+
 "use client";
 
 import { useEffect } from "react";
@@ -15,11 +20,30 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+/**
+ * Representa un paso en la guía de uso
+ * @typedef {Object} Step
+ * @property {string} text - Descripción del paso
+ * @property {string} [tip] - Consejo adicional (opcional)
+ */
 interface Step {
   text: string;
   tip?: string;
 }
 
+/**
+ * Representa una sección de la guía
+ * @typedef {Object} Section
+ * @property {string} id - ID único de la sección
+ * @property {React.ElementType} icon - Icono de Lucide React
+ * @property {string} color - Color de la sección (clase Tailwind)
+ * @property {string} title - Título de la sección
+ * @property {string} description - Descripción breve
+ * @property {Step[]} steps - Lista de pasos
+ * @property {Object} [link] - Enlaces a páginas relevantes
+ * @property {string} link.href - URL del enlace
+ * @property {string} link.label - Texto del enlace
+ */
 interface Section {
   id: string;
   icon: React.ElementType;
@@ -137,7 +161,7 @@ const colorMap: Record<string, { bg: string; icon: string; badge: string; border
   slate:   { bg: "bg-slate-50",   icon: "text-slate-600",   badge: "bg-slate-100 text-slate-700",    border: "border-slate-200" },
 };
 
-interface UsageGuideModalProps {
+export interface UsageGuideModalProps {
   onClose: () => void;
 }
 

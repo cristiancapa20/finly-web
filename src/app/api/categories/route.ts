@@ -1,3 +1,8 @@
+/**
+ * @module api/categories
+ * Manejador para operaciones CRUD en categorías. Gestiona categorías del sistema y personalizadas. Auto-crea las categorías del sistema si no existen.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
@@ -29,6 +34,12 @@ async function ensureSystemCategories() {
   }
 }
 
+/**
+ * GET /api/categories
+ * Obtiene todas las categorías disponibles para el usuario: categorías del sistema y categorías personalizadas del usuario. Auto-crea las categorías del sistema en la primera llamada.
+ * @returns {Array} Array de categorías con id, name, color, icon, isSystem
+ * @throws {401} Si no hay sesión de usuario autenticada
+ */
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -47,6 +58,14 @@ export async function GET() {
   return NextResponse.json({ data: categories });
 }
 
+/**
+ * POST /api/categories
+ * Crea una nueva categoría personalizada para el usuario. Requiere nombre y color.
+ * @param {NextRequest} req - Solicitud HTTP con body: { name, color }
+ * @returns {Object} Categoría creada con id, name, color, icon, isSystem (HTTP 201)
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {400} Si faltan campos requeridos
+ */
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {

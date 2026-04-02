@@ -1,3 +1,8 @@
+/**
+ * @module api/parse-transaction
+ * Manejador para parseador de transacciones con IA. Utiliza Claude para extraer información estructurada de texto natural describiendo una transacción financiera.
+ */
+
 import Anthropic from "@anthropic-ai/sdk";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -7,6 +12,15 @@ import { prisma } from "@/lib/prisma";
 
 const anthropic = new Anthropic();
 
+/**
+ * POST /api/parse-transaction
+ * Procesa texto natural de una transacción financiera usando Claude para extraer el monto, tipo (INCOME/EXPENSE), categoría, cuenta, descripción y fecha. Convierte los nombres de categorías y cuentas a IDs.
+ * @param {NextRequest} request - Solicitud HTTP con body: { text }
+ * @returns {Object} { amount, type, categoryId, accountId, description, date } - Datos parseados
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {400} Si el campo 'text' falta o es inválido
+ * @throws {500} Error al llamar a Claude o procesar respuesta
+ */
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {

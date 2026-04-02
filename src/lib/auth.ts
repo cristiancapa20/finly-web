@@ -1,8 +1,22 @@
+/**
+ * @module auth
+ * Configuración de autenticación con NextAuth.js usando estrategia JWT
+ * y proveedor de credenciales (email + contraseña).
+ */
+
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * Opciones de configuración de NextAuth para la aplicación.
+ *
+ * - **Proveedor**: Credenciales (email/password) con bcrypt para hash comparison.
+ * - **Estrategia de sesión**: JWT (sin base de datos de sesiones).
+ * - **Callbacks**: Inyecta `user.id` en el token JWT y en el objeto `session`.
+ * - **Página de login personalizada**: `/login`.
+ */
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({

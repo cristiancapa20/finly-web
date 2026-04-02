@@ -1,3 +1,8 @@
+/**
+ * @module TransactionForm
+ * Formulario para registrar nuevas transacciones (ingresos y gastos).
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,17 +11,40 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/toast";
 import { useCurrency } from "@/context/CurrencyContext";
 
+/**
+ * Representa una categoría de transacción
+ * @typedef {Object} Category
+ * @property {string} id - ID único de la categoría
+ * @property {string} name - Nombre de la categoría
+ */
 interface Category {
   id: string;
   name: string;
 }
 
+/**
+ * Representa una cuenta bancaria
+ * @typedef {Object} Account
+ * @property {string} id - ID único de la cuenta
+ * @property {string} name - Nombre de la cuenta
+ * @property {number} balance - Saldo actual de la cuenta
+ */
 interface Account {
   id: string;
   name: string;
   balance: number;
 }
 
+/**
+ * Estado del formulario de transacción
+ * @typedef {Object} FormState
+ * @property {string} amount - Monto de la transacción
+ * @property {"INCOME" | "EXPENSE" | ""} type - Tipo de transacción
+ * @property {string} categoryId - ID de la categoría seleccionada
+ * @property {string} accountId - ID de la cuenta seleccionada
+ * @property {string} description - Descripción opcional de la transacción
+ * @property {string} date - Fecha de la transacción (YYYY-MM-DD)
+ */
 interface FormState {
   amount: string;
   type: "INCOME" | "EXPENSE" | "";
@@ -40,6 +68,13 @@ const defaultForm = (): FormState => ({
   date: getToday(),
 });
 
+/**
+ * Formulario para crear nuevas transacciones.
+ * Incluye validación de saldo insuficiente para gastos.
+ * @param {Object} props - Props del componente
+ * @param {() => void} [props.onSuccess] - Callback ejecutado después de guardar exitosamente
+ * @returns {React.ReactElement} El formulario renderizado
+ */
 export default function TransactionForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const { formatCurrency } = useCurrency();
   const queryClient = useQueryClient();

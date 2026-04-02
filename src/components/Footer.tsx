@@ -1,3 +1,8 @@
+/**
+ * @module Footer
+ * Pie de página con información de la aplicación, enlaces de navegación y redes sociales.
+ */
+
 "use client";
 
 import { Github, Linkedin, Instagram, Globe, TrendingUp } from "lucide-react";
@@ -19,6 +24,11 @@ const services = [
   { href: "/help", label: "Ayuda" },
 ];
 
+/**
+ * Componente de pie de página que muestra información de la aplicación,
+ * enlaces de servicios y redes sociales del desarrollador.
+ * @returns {React.ReactElement} El pie de página renderizado
+ */
 export default function Footer() {
   return (
     <footer className="mt-12 border-t border-gray-200 bg-white/70 px-4 py-6 sm:px-6 lg:px-8">

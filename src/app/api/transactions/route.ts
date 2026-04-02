@@ -1,3 +1,8 @@
+/**
+ * @module api/transactions
+ * Manejador para operaciones CRUD en transacciones. Permite listar, crear y gestionar transacciones financieras con paginación y filtros. Valida saldo disponible para gastos.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
@@ -69,6 +74,14 @@ async function loadTransactionsPageAndTotals(
   ]);
 }
 
+/**
+ * GET /api/transactions
+ * Obtiene transacciones del usuario con paginación, filtros opcionales y cálculo de totales. Excluye transacciones marcadas como eliminadas. Identifica transacciones vinculadas a préstamos.
+ * @param {NextRequest} request - Solicitud HTTP con query params: ?type=INCOME|EXPENSE&categoryId=id&accountId=id&dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&page=1&limit=20
+ * @returns {Object} { data: [...], total: number, page: number, limit: number, totals: { totalIncome, totalExpenses, net } }
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {500} Error interno del servidor
+ */
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -137,6 +150,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * POST /api/transactions
+ * Crea una nueva transacción. Valida que existan los campos requeridos. Para gastos, verifica que haya saldo suficiente en la cuenta.
+ * @param {NextRequest} request - Solicitud HTTP con body: { amount, type, categoryId, accountId, description?, date }
+ * @returns {Object} Transacción creada con monto convertido a formato decimal (HTTP 201)
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {400} Si faltan campos requeridos
+ * @throws {404} Si la cuenta no existe
+ * @throws {422} Si no hay saldo suficiente (para gastos)
+ */
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {

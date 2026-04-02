@@ -1,8 +1,21 @@
+/**
+ * @module api/profile
+ * Manejador para operaciones de perfil de usuario. Permite obtener y actualizar información de perfil (nombre, avatar, moneda).
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * GET /api/profile
+ * Obtiene los datos del perfil del usuario autenticado incluyendo email, nombre, avatar, moneda y fecha de creación.
+ * @returns {Object} Usuario con id, email, displayName, avatar, currency, createdAt
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {404} Si el usuario no existe
+ * @throws {500} Error interno del servidor
+ */
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -22,6 +35,15 @@ export async function GET() {
   }
 }
 
+/**
+ * PATCH /api/profile
+ * Actualiza los datos del perfil del usuario autenticado (nombre, avatar, moneda).
+ * @param {NextRequest} req - Solicitud HTTP con body: { displayName?, avatar?, currency? }
+ * @returns {Object} Usuario actualizado con id, email, displayName, avatar, currency
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {404} Si el usuario no existe
+ * @throws {500} Error interno del servidor
+ */
 export async function PATCH(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

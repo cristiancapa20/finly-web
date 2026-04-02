@@ -1,3 +1,8 @@
+/**
+ * @module SubscriptionsClient
+ * Gestor de suscripciones recurrentes mensuales.
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,6 +12,13 @@ import Skeleton from "react-loading-skeleton";
 import { toast } from "@/lib/toast";
 import { Plus, X, Trash2, Pencil, Repeat, Pause, Play, Clock } from "lucide-react";
 
+/**
+ * Representa una categoría dentro de suscripciones
+ * @typedef {Object} SubCategory
+ * @property {string} id - ID único de la categoría
+ * @property {string} name - Nombre de la categoría
+ * @property {string} color - Color hexadecimal de la categoría
+ */
 interface SubCategory {
   id: string;
   name: string;
@@ -482,7 +494,17 @@ function SubscriptionCard({
   );
 }
 
-/* ─── Main Component ─── */
+/**
+ * Componente principal para gestionar suscripciones recurrentes.
+ * Permite:
+ * - Crear nuevas suscripciones
+ * - Editar suscripciones existentes
+ * - Pausar/activar suscripciones
+ * - Eliminar suscripciones
+ * - Filtrar por activas/pausadas
+ * - Ver total mensual de suscripciones activas
+ * @returns {React.ReactElement} Panel de gestión de suscripciones
+ */
 export default function SubscriptionsClient() {
   const { formatCurrency } = useCurrency();
   const queryClient = useQueryClient();

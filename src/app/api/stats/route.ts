@@ -1,3 +1,8 @@
+/**
+ * @module api/stats
+ * Manejador para estadísticas generales de transacciones. Retorna totales de ingresos, gastos, balance y desglose por categoría.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
@@ -12,6 +17,13 @@ function missingSoftDeleteColumn(error: unknown) {
   );
 }
 
+/**
+ * GET /api/stats
+ * Obtiene estadísticas mensuales consolidadas incluyendo ingresos totales, gastos totales, balance y desglose de gastos por categoría.
+ * @param {NextRequest} request - Solicitud HTTP con query params: ?month=YYYY-MM&accountId=id?
+ * @returns {Object} { totalIncome, totalExpenses, balance, expensesByCategory: [{ categoryId, categoryName, color, total }] }
+ * @throws {401} Si no hay sesión de usuario autenticada
+ */
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {

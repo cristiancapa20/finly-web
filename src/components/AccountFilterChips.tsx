@@ -1,5 +1,17 @@
+/**
+ * @module AccountFilterChips
+ * Componente para filtrar transacciones por cuenta bancaria.
+ */
+
 "use client";
 
+/**
+ * Representa una cuenta para mostrar en los chips de filtro
+ * @typedef {Object} AccountFilterChipItem
+ * @property {string} id - ID único de la cuenta
+ * @property {string} name - Nombre o apodo de la cuenta
+ * @property {number} balance - Saldo en moneda (como en GET /api/accounts)
+ */
 export type AccountFilterChipItem = {
   id: string;
   name: string;
@@ -23,7 +35,17 @@ const defaultFormatBalance = (amount: number) =>
     maximumFractionDigits: 2,
   }).format(amount);
 
-type AccountFilterChipsProps = {
+/**
+ * Props para el componente AccountFilterChips
+ * @typedef {Object} AccountFilterChipsProps
+ * @property {AccountFilterChipItem[]} accounts - Lista de cuentas a mostrar
+ * @property {string} selectedAccountId - ID de la cuenta seleccionada actualmente (vacío = todas)
+ * @property {(id: string) => void} onSelectAccountId - Callback cuando se selecciona una cuenta
+ * @property {string} [allLabel=”Todas”] - Etiqueta del chip “todas las cuentas”
+ * @property {(amount: number) => string} [formatBalance] - Función para formatear el saldo
+ * @property {string} [className] - Clases CSS adicionales
+ */
+export type AccountFilterChipsProps = {
   accounts: AccountFilterChipItem[];
   selectedAccountId: string;
   onSelectAccountId: (id: string) => void;
@@ -33,13 +55,25 @@ type AccountFilterChipsProps = {
   className?: string;
 };
 
+/**
+ * Componente que muestra chips filtrable por cuenta bancaria.
+ * Permite seleccionar una cuenta individual o ver todas las cuentas.
+ * @param {AccountFilterChipsProps} props - Props del componente
+ * @returns {React.ReactElement|null} El componente renderizado, o null si no hay cuentas
+ * @example
+ * <AccountFilterChips
+ *   accounts={[{ id: “1”, name: “Mi Cuenta”, balance: 1000 }]}
+ *   selectedAccountId=””
+ *   onSelectAccountId={(id) => setSelected(id)}
+ * />
+ */
 export function AccountFilterChips({
   accounts,
   selectedAccountId,
   onSelectAccountId,
-  allLabel = "Todas",
+  allLabel = “Todas”,
   formatBalance = defaultFormatBalance,
-  className = "",
+  className = “”,
 }: AccountFilterChipsProps) {
   if (accounts.length === 0) return null;
 

@@ -1,3 +1,12 @@
+/**
+ * @module Providers
+ * Proveedor de contexto raíz que envuelve la aplicación con:
+ * - Autenticación (NextAuth)
+ * - Gestión de estado (React Query)
+ * - Moneda global
+ * - Notificaciones (Toast)
+ */
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,6 +17,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 
+/**
+ * Cliente de React Query configurado con opciones por defecto
+ * @type {QueryClient}
+ */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -17,6 +30,10 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * Hook para detectar si el navegador es móvil
+ * @returns {boolean} True si el ancho máximo es 767px
+ */
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -29,6 +46,12 @@ function useIsMobile() {
   return isMobile;
 }
 
+/**
+ * Proveedor raíz que configura todos los contextos y servicios de la aplicación.
+ * @param {Object} props - Props del componente
+ * @param {React.ReactNode} props.children - Contenido de la aplicación
+ * @returns {React.ReactElement} Árbol de proveedores configurado
+ */
 export default function Providers({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const isPWA = useIsPWA();

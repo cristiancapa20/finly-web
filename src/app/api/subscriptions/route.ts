@@ -1,3 +1,8 @@
+/**
+ * @module api/subscriptions
+ * Manejador para operaciones CRUD en suscripciones. Permite listar y crear suscripciones recurrentes.
+ */
+
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
@@ -7,6 +12,13 @@ import { prisma } from "@/lib/prisma";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const db = prisma as any;
 
+/**
+ * GET /api/subscriptions
+ * Obtiene todas las suscripciones del usuario con información de categoría y cuenta. Montos se convierten de centavos a formato decimal.
+ * @returns {Array} Array de suscripciones con id, name, amount, dayOfMonth, categoryId, accountId, category, account
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {500} Error interno del servidor
+ */
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -33,6 +45,15 @@ export async function GET() {
   }
 }
 
+/**
+ * POST /api/subscriptions
+ * Crea una nueva suscripción recurrente. Requiere nombre, monto, día del mes (1-31) y cuenta. La categoría es opcional.
+ * @param {NextRequest} req - Solicitud HTTP con body: { name, amount, dayOfMonth, accountId, categoryId? }
+ * @returns {Object} Suscripción creada con monto convertido a formato decimal, información de categoría y cuenta (HTTP 201)
+ * @throws {401} Si no hay sesión de usuario autenticada
+ * @throws {400} Si los datos requeridos son inválidos
+ * @throws {500} Error interno del servidor
+ */
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

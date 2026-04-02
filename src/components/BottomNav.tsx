@@ -1,3 +1,8 @@
+/**
+ * @module BottomNav
+ * Barra de navegación inferior para la interfaz móvil en modo PWA.
+ */
+
 "use client";
 
 import { Link } from "next-view-transitions";
@@ -20,6 +25,11 @@ const tabs = [
   { href: "/profile",   label: "Perfil",    icon: User },
 ];
 
+/**
+ * Componente de navegación inferior que se muestra solo en modo PWA móvil.
+ * Proporciona acceso rápido a las páginas principales de la aplicación.
+ * @returns {React.ReactElement|null} La barra de navegación o null si no es PWA
+ */
 export default function BottomNav() {
   const { data: session, status } = useSession();
   const isPWA = useIsPWA();
