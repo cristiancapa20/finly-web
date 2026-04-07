@@ -1,0 +1,14 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /accounts
+Disallow: /transactions
+Disallow: /commitments
+Disallow: /history
+Disallow: /profile
+Disallow: /settings
+Disallow: /api/
+Disallow: /offline
+
+Sitemap: https://finlycr.com/sitemap.xml

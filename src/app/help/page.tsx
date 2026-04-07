@@ -12,6 +12,7 @@ import {
   DollarSign,
   RefreshCw,
 } from "lucide-react";
+import JsonLd, { faqSchema } from "@/components/JsonLd";
 
 interface Step {
   text: string;
@@ -169,6 +170,7 @@ const colorMap: Record<string, { bg: string; icon: string; badge: string; border
 export default function HelpPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
+      <JsonLd data={faqSchema} />
 
       {/* Header */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 text-center">
